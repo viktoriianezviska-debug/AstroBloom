@@ -5,7 +5,6 @@
 <title>Astrobloom</title>
 <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;700&display=swap" rel="stylesheet">
 <style>
-/* Global Styles */
 html, body {
     height: 100%;
     margin: 0;
@@ -17,12 +16,9 @@ header {
     background-color: black;
     color: white;
     display: flex;
+    justify-content: center;
     align-items: center;
-    justify-content: center; /* center nav links */
     padding: 12px 0;
-    position: sticky;
-    top: 0;
-    z-index: 1000;
 }
 
 header .logo {
@@ -36,17 +32,16 @@ header nav a {
     margin: 0 15px;
     font-weight: bold;
     font-size: 18px;
-    transition: color 0.3s;
 }
 
 header nav a:hover {
     color: #ad1c69;
 }
 
-/* Background Section */
+/* Background */
 .bg {
-    background-image: url('background.png'); /* your uploaded image */
-    min-height: 100vh; /* full viewport */
+    background-image: url('background.png'); 
+    min-height: 100vh;
     background-position: center;
     background-repeat: no-repeat;
     background-size: cover;
@@ -55,8 +50,6 @@ header nav a:hover {
     justify-content: center;
     align-items: center;
     text-align: center;
-    padding: 0 20px;
-    box-sizing: border-box;
 }
 
 /* Title and Subtitle */
@@ -77,49 +70,31 @@ a.explore-button {
     display: inline-block;
     padding: 16px 32px;
     background-color: black;
-    color: #ffffff;
+    color: white;
     text-decoration: none;
     font-weight: bold;
     border-radius: 12px;
-    font-family: 'Syne', sans-serif;
-    transition: background 0.3s;
-    margin-top: 20px;
     border: 2px solid #ad1c69;
+    transition: background 0.3s;
 }
 
 a.explore-button:hover {
     background-color: #ad1c69;
     color: black;
 }
-
-/* Responsive */
-@media (max-width: 768px) {
-    h1.main-title {
-        font-size: 50px;
-    }
-    p.subtitle {
-        font-size: 24px;
-    }
-    header nav a {
-        margin: 0 10px;
-        font-size: 16px;
-    }
-}
 </style>
 </head>
 <body>
 
-<!-- Header -->
 <header>
   <div class="logo">🌺</div>
   <nav>
-    <a href="main.html">Home</a> |
+    <a href="index.html">Home</a> |
     <a href="project.html">Project</a> |
     <a href="about.html">About</a>
   </nav>
 </header>
 
-<!-- Main Background Section -->
 <div class="bg">
   <h1 class="main-title">Astrobloom</h1>
   <p class="subtitle">witness the pulse of life</p>

@@ -1,9 +1,0 @@
-# Astrobloom
-
-witness the pulse of life
-
-## About
-Astrobloom is a project that brings science and design together. Using NASA Earth observations, we detect plant blooming events around the world—just like pollinators do. Our mission is to make the hidden patterns of life on Earth visible, interactive, and useful.
-
-(https://static.wixstatic.com/media/11062b_ab2922a844e340e1b2da523d12d9feeb~mv2.jpg/v1/fill/w_258,h_182,al_c,q_80,usm_0.66_1.00_0.01,enc_avif,quality_auto/%E3%82%B7%E3%83%A5%E3%83%BC%E3%83%AB%E3%81%AA%E9%87%8E%E7%94%9F%E3%81%AE%E8%87%AA%E7%84%B6.jpg)
-

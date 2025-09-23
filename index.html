@@ -1,10 +1,8 @@
-
-
 <!-- Global Styles -->
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;700&display=swap');
 
-body, html {
+html, body {
     height: 100%;
     margin: 0;
     font-family: 'Syne', sans-serif;
@@ -12,8 +10,8 @@ body, html {
 
 .bg {
     /* full-page background */
-    background-image: url('download (5).png'); /* Upload your image to repo */
-    height: 100%;
+    background-image: url('download (5).png'); 
+    min-height: 100vh; 
     background-position: center;
     background-repeat: no-repeat;
     background-size: cover;
@@ -22,19 +20,28 @@ body, html {
     justify-content: center;
     align-items: center;
     text-align: center;
-    color: white;
+    color: black;
 }
 
-h1, p {
-    margin: 10px;
+/* Title and subtitle */
+h1.main-title {
+    font-size: 80px; 
+    color: black;
+    margin: 0;
+}
+
+p.subtitle {
+    font-size: 32px; 
+    color: black;
+    margin: 10px 0 30px 0;
 }
 
 /* Explore Button */
 a.explore-button {
     display: inline-block;
-    padding: 14px 28px;
+    padding: 16px 32px;
     background-color: black; /* button color */
-    color: #ad1c69; /* text color */
+    color: #ffffff; /* text color */
     text-decoration: none;
     font-weight: bold;
     border-radius: 12px;
@@ -48,17 +55,25 @@ a.explore-button:hover {
     background-color: #ad1c69;
     color: black;
 }
+
+/* About Section */
+.about-section {
+    margin: 50px auto;
+    max-width: 800px;
+    text-align: left;
+    color: black;
+}
 </style>
 
 <!-- Page Content -->
 <div class="bg">
-  <h1>Astrobloom</h1>
-  <p>witness the pulse of life</p>
+  <h1 class="main-title">Astrobloom</h1>
+  <p class="subtitle">witness the pulse of life</p>
   <a href="project.html" class="explore-button">Explore</a>
 </div>
 
 <!-- About Section -->
-<div style="margin: 50px auto; max-width: 800px; text-align: left; color: white;">
-## About
-Astrobloom is a project that brings science and design together. Using NASA Earth observations, we detect plant blooming events around the world—just like pollinators do. Our mission is to make the hidden patterns of life on Earth visible, interactive, and useful.
+<div class="about-section">
+<h2>About</h2>
+<p>Astrobloom is a project that brings science and design together. Using NASA Earth observations, we detect plant blooming events around the world—just like pollinators do. Our mission is to make the hidden patterns of life on Earth visible, interactive, and useful.</p>
 </div>

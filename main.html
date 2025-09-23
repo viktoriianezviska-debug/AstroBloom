@@ -1,22 +1,17 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="UTF-8">
-<title>Astrobloom</title>
-<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;700&display=swap" rel="stylesheet">
+<!-- Global Styles -->
 <style>
-/* Global Styles */
+@import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;700&display=swap');
+
 html, body {
     height: 100%;
     margin: 0;
     font-family: 'Syne', sans-serif;
 }
 
-
-/* Background Section */
 .bg {
-    background-image: url('download (5).png'); /* renamed file */
-    min-height: 100vh;
+    /* full-page background */
+    background-image: url('download (5).png'); /* make sure the image is uploaded to repo */
+    min-height: 100vh; /* ensures full viewport height */
     background-position: center;
     background-repeat: no-repeat;
     background-size: cover;
@@ -25,19 +20,18 @@ html, body {
     justify-content: center;
     align-items: center;
     text-align: center;
-    padding: 0 20px;
-    box-sizing: border-box;
+    color: black;
 }
 
-/* Title and Subtitle */
+/* Title and subtitle */
 h1.main-title {
-    font-size: 80px;
+    font-size: 80px; /* bigger */
     color: black;
     margin: 0;
 }
 
 p.subtitle {
-    font-size: 32px;
+    font-size: 32px; /* bigger */
     color: black;
     margin: 10px 0 30px 0;
 }
@@ -46,8 +40,8 @@ p.subtitle {
 a.explore-button {
     display: inline-block;
     padding: 16px 32px;
-    background-color: black;
-    color: #ffffff;
+    background-color: black; /* button color */
+    color: #ffffff; /* text color */
     text-decoration: none;
     font-weight: bold;
     border-radius: 12px;
@@ -62,14 +56,24 @@ a.explore-button:hover {
     color: black;
 }
 
+/* About Section */
+.about-section {
+    margin: 50px auto;
+    max-width: 800px;
+    text-align: left;
+    color: black;
+}
+</style>
 
-
-<!-- Main Background Section -->
+<!-- Page Content -->
 <div class="bg">
   <h1 class="main-title">Astrobloom</h1>
   <p class="subtitle">witness the pulse of life</p>
   <a href="project.html" class="explore-button">Explore</a>
 </div>
 
-</body>
-</html>
+<!-- About Section -->
+<div class="about-section">
+<h2>About</h2>
+<p>Astrobloom is a project that brings science and design together. Using NASA Earth observations, we detect plant blooming events around the world—just like pollinators do. Our mission is to make the hidden patterns of life on Earth visible, interactive, and useful.</p>
+</div>

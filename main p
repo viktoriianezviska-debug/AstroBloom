@@ -1,49 +1,64 @@
+<!-- index.md -->
+
+<!-- Global Styles -->
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;700&display=swap');
 
-body {
+body, html {
+    height: 100%;
+    margin: 0;
     font-family: 'Syne', sans-serif;
 }
-</style>
 
-<style>
-body {
-    background-image: url('https://static.wixstatic.com/media/11062b_ab2922a844e340e1b2da523d12d9feeb~mv2.jpg/v1/fill/w_258,h_182,al_c,q_80,usm_0.66_1.00_0.01,enc_avif,quality_auto/%E3%82%B7%E3%83%A5%E3%83%BC%E3%83%AB%E3%81%AA%E9%87%8E%E7%94%9F%E3%81%AE%E8%87%AA%E7%84%B6.jpg');
-    background-size: cover;
+.bg {
+    /* full-page background */
+    background-image: url('https://static.tildacdn.one/tild3866-3136-4638-a532-633862316633/ale18238_a_beautiful.jpg'); /* Upload your image to repo */
+    height: 100%;
     background-position: center;
-    background-attachment: fixed;
-    color: white; /* makes text readable on dark images */
-}
-</style>
-
-
-# Astrobloom
-
-witness the pulse of life
-
-## About
-Astrobloom is a project that brings science and design together. Using NASA Earth observations, we detect plant blooming events around the world—just like pollinators do. Our mission is to make the hidden patterns of life on Earth visible, interactive, and useful.
-
-
-
-<a href="project.html" style="
-    display: inline-block;
-    padding: 12px 24px;
-    background-color: black;
+    background-repeat: no-repeat;
+    background-size: cover;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
     color: white;
+}
+
+h1, p {
+    margin: 10px;
+}
+
+/* Explore Button */
+a.explore-button {
+    display: inline-block;
+    padding: 14px 28px;
+    background-color: black; /* button color */
+    color: #ad1c69; /* text color */
     text-decoration: none;
     font-weight: bold;
     border-radius: 12px;
     font-family: 'Syne', sans-serif;
     transition: background 0.3s;
-">
-    Explore
-</a>
+    margin-top: 20px;
+    border: 2px solid #ad1c69;
+}
 
-<style>
-a:hover {
-    background-color: #333; /* slightly lighter black on hover */
+a.explore-button:hover {
+    background-color: #ad1c69;
+    color: black;
 }
 </style>
 
+<!-- Page Content -->
+<div class="bg">
+  <h1>Astrobloom</h1>
+  <p>witness the pulse of life</p>
+  <a href="project.html" class="explore-button">Explore</a>
+</div>
 
+<!-- About Section -->
+<div style="margin: 50px auto; max-width: 800px; text-align: left; color: white;">
+## About
+Astrobloom is a project that brings science and design together. Using NASA Earth observations, we detect plant blooming events around the world—just like pollinators do. Our mission is to make the hidden patterns of life on Earth visible, interactive, and useful.
+</div>

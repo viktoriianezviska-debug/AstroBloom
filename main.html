@@ -1,17 +1,52 @@
-<!-- Global Styles -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Astrobloom</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;700&display=swap" rel="stylesheet">
 <style>
-@import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;700&display=swap');
-
+/* Global Styles */
 html, body {
     height: 100%;
     margin: 0;
     font-family: 'Syne', sans-serif;
 }
 
+/* Header */
+header {
+    background-color: black;
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 12px 0;
+    position: sticky;
+    top: 0;
+    z-index: 1000;
+}
+
+header .logo {
+    margin-right: 20px;
+    font-size: 24px;
+}
+
+header nav a {
+    color: white;
+    text-decoration: none;
+    margin: 0 15px;
+    font-weight: bold;
+    font-size: 18px;
+    transition: color 0.3s;
+}
+
+header nav a:hover {
+    color: #ad1c69;
+}
+
+/* Background Section */
 .bg {
-    /* full-page background */
-    background-image: url('download (5).png'); 
-    min-height: 100vh; /* ensures full viewport height */
+    background-image: url('download (5).png'); /* renamed file */
+    min-height: 100vh;
     background-position: center;
     background-repeat: no-repeat;
     background-size: cover;
@@ -20,18 +55,19 @@ html, body {
     justify-content: center;
     align-items: center;
     text-align: center;
-    color: black;
+    padding: 0 20px;
+    box-sizing: border-box;
 }
 
-/* Title and subtitle */
+/* Title and Subtitle */
 h1.main-title {
-    font-size: 80px; /* bigger */
+    font-size: 80px;
     color: black;
     margin: 0;
 }
 
 p.subtitle {
-    font-size: 32px; /* bigger */
+    font-size: 32px;
     color: black;
     margin: 10px 0 30px 0;
 }
@@ -40,8 +76,8 @@ p.subtitle {
 a.explore-button {
     display: inline-block;
     padding: 16px 32px;
-    background-color: black; /* button color */
-    color: #ffffff; /* text color */
+    background-color: black;
+    color: #ffffff;
     text-decoration: none;
     font-weight: bold;
     border-radius: 12px;
@@ -56,24 +92,38 @@ a.explore-button:hover {
     color: black;
 }
 
-/* About Section */
-.about-section {
-    margin: 50px auto;
-    max-width: 800px;
-    text-align: left;
-    color: black;
+/* Responsive */
+@media (max-width: 768px) {
+    h1.main-title {
+        font-size: 50px;
+    }
+    p.subtitle {
+        font-size: 24px;
+    }
+    header nav a {
+        margin: 0 10px;
+        font-size: 16px;
+    }
 }
 </style>
+</head>
+<body>
 
-<!-- Page Content -->
+<!-- Header -->
+<header>
+  <div class="logo">🌺</div>
+  <nav>
+    <a href="index.html">Home</a> |
+    <a href="project.html">Project</a>
+  </nav>
+</header>
+
+<!-- Main Background Section -->
 <div class="bg">
   <h1 class="main-title">Astrobloom</h1>
   <p class="subtitle">witness the pulse of life</p>
   <a href="project.html" class="explore-button">Explore</a>
 </div>
 
-<!-- About Section -->
-<div class="about-section">
-<h2>About</h2>
-<p>Astrobloom is a project that brings science and design together. Using NASA Earth observations, we detect plant blooming events around the world—just like pollinators do. Our mission is to make the hidden patterns of life on Earth visible, interactive, and useful.</p>
-</div>
+</body>
+</html>

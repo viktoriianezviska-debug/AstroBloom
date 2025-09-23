@@ -1,2 +1,152 @@
+<DOCTYOE html!>
+<html lang="en">
+<head>
+  <meta chartset="UTF-8">
+  <title>AstroBloom - Project</title>
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;700&display=swap" rel="stylesheet">
+<stye>
+  /*body*/
+  * {
+  margin: 0;
+  padding: 0';
+  box-sizing: border-box;
+  }
+   html, body {
+      height: 100%;
+      font-family: 'Syne', sans-serif;
+      display: flex;
+      flex-direction: column;
+    }
 
-# hello world!
+    /* Header */
+    header {
+      position: fixed;
+      top: 0;
+      width: 100%;
+      background-color: black;
+      color: white;
+      display: flex;
+      justify-content: center;
+      padding: 12px 20px;
+      z-index: 1000;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.5);
+    }
+    header nav a {
+      color: white;
+      text-decoration: none;
+      margin: 0 15px;
+      font-weight: bold;
+      font-size: 18px;
+      transition: color 0.3s;
+    }
+    header nav a:hover {
+      color: #ad1c69;
+    }
+
+    /* Main Layout */
+    main {
+      flex: 1;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      grid-gap: 20px;
+      padding: 100px 20px 80px; /* space for header + footer */
+    }
+
+    #globeViz {
+      width: 100%;
+      height: 100%;
+      border-radius: 12px;
+    }
+    #chart-container {
+      background: white;
+      border-radius: 12px;
+      padding: 20px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    /* Bottom strip */
+    .strip {
+      background-color: black;
+      color: white;
+      font-size: 18px;
+      line-height: 1.6;
+      padding: 20px 40px;
+      text-align: left;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Header -->
+  <header>
+    <nav>
+      <a href="index.html">Home</a> |
+      <a href="project.html">Project</a> |
+      <a href="about.html">About</a>
+    </nav>
+  </header>
+
+  <!-- Main -->
+  <main>
+    <div id="globeViz"></div>
+    <div id="chart-container">
+      <canvas id="bloomChart"></canvas>
+    </div>
+  </main>
+
+  <!-- Bottom strip -->
+  <div class="strip">
+    Connecting science with practical applications and insights.
+  </div>
+
+  <!-- Scripts -->
+  <script src="https://unpkg.com/three"></script>
+  <script src="https://unpkg.com/globe.gl"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+  <script>
+    /* YOUR GLOBE CODE */
+    const world = Globe()
+      .globeImageUrl('//unpkg.com/three-globe/example/img/earth-night.jpg')
+      .bumpImageUrl('//unpkg.com/three-globe/example/img/earth-topology.png')
+      .pointsData([
+        { lat: 37.7749, lng: -122.4194, size: 0.2, color: 'pink' },
+        { lat: 48.8566, lng: 2.3522, size: 0.3, color: 'lightblue' },
+        { lat: -33.8688, lng: 151.2093, size: 0.25, color: 'lime' }
+      ])
+      .pointAltitude('size')
+      .pointColor('color');
+
+    world(document.getElementById('globeViz'));
+    world.controls().autoRotate = true;
+    world.controls().autoRotateSpeed = 0.7;
+
+    /* YOUR CHART CODE */
+    const ctx = document.getElementById('bloomChart').getContext('2d');
+    new Chart(ctx, {
+      type: 'line',
+      data: {
+        labels: ['Spring', 'Summer', 'Fall', 'Winter'],
+        datasets: [{
+          label: 'Bloom Intensity',
+          data: [30, 80, 60, 20],
+          borderColor: '#ad1c69',
+          backgroundColor: 'rgba(173,28,105,0.2)',
+          borderWidth: 2,
+          fill: true,
+          tension: 0.3
+        }]
+      },
+      options: {
+        responsive: true,
+        scales: {
+          y: { beginAtZero: true }
+        }
+      }
+    });
+  </script>
+
+</body>
+</html>

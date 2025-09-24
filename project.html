@@ -6,87 +6,111 @@
 <title>AstroBloom Project</title>
 <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<script src="https://cdn.tailwindcss.com"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 <script src="https://unpkg.com/three"></script>
 <script src="https://unpkg.com/globe.gl"></script>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <style>
-  /* General resets */
-  * { margin: 0; padding: 0; box-sizing: border-box; }
-  html, body { height: 100%; font-family: 'Syne', sans-serif; background: #000; color: #fff; }
-  header { position: fixed; top:0; width:100%; background:black; color:white; display:flex; justify-content:center; padding:12px 20px; z-index:1000; }
-  header nav a { color:white; text-decoration:none; margin:0 15px; font-weight:bold; font-size:18px; transition:color 0.3s; }
-  header nav a:hover { color:#ad1c69; }
-  main { padding-top:80px; }
-  
-  /* Globe */
-  #globeViz { width:100%; height:70vh; }
-  #sliderContainer { position:absolute; bottom:20px; width:100%; text-align:center; font-size:1.2em; color:white; }
-  input[type="range"] { width:60%; }
-  #playBtn { margin-top:10px; padding:8px 16px; font-size:1em; cursor:pointer; border-radius:8px; border:none; }
+/* General resets and custom font */
+* { margin: 0; padding: 0; box-sizing: border-box; }
+html, body { height: 100%; font-family: 'Syne', sans-serif; }
 
-  /* Chart Section */
-  .chart-section { width: 100%; max-width:1200px; margin:40px auto; padding:20px; background:#0d0d0d; border-radius:16px; }
-  #ndviChart { width:100%; height:300px; }
-  #chart-status { color:#888; }
-
-  /* Map Section */
-  #map { width:100%; height:500px; border-radius:16px; margin-top:40px; }
-
-  /* AI Prediction */
-  #ai-response-container { background:#111; color:#ccc; padding:16px; border-radius:12px; min-height:60px; margin-top:16px; }
-
-  .strip { background:black; color:white; font-size:18px; line-height:1.6; padding:20px 40px; text-align:left; margin-top:40px; }
-
-  button { cursor:pointer; }
+/* Styling for the globe visualization */
+#globeViz {
+    width: 100%;
+    height: 70vh;
+}
+#map {
+    width: 100%;
+    height: 500px;
+    border-radius: 1rem;
+    z-index: 10;
+}
+/* For the file input to be styled consistently */
+input[type="file"] {
+    cursor: pointer;
+}
 </style>
 </head>
-<body>
+<body class="bg-gray-950 text-white min-h-screen flex flex-col items-center">
 
-<header>
-  <nav>
-    <a href="index.html">Home</a> |
-    <a href="project.html">Project</a> |
-    <a href="about.html">About</a>
-  </nav>
+<!-- Header Section -->
+<header class="w-full fixed top-0 left-0 bg-gray-950/80 backdrop-blur-sm z-50 py-4 shadow-lg">
+    <nav class="container mx-auto flex justify-center space-x-8">
+        <a href="#" class="text-white text-lg font-bold hover:text-pink-400 transition-colors">Home</a>
+        <a href="#" class="text-white text-lg font-bold hover:text-pink-400 transition-colors">Project</a>
+        <a href="#" class="text-white text-lg font-bold hover:text-pink-400 transition-colors">About</a>
+    </nav>
 </header>
 
-<main>
-  <!-- Globe -->
-  <div id="globeViz"></div>
-  <div id="sliderContainer">
-    <span id="monthLabel">January</span><br>
-    <input type="range" id="monthSlider" min="0" max="11" step="1" value="0"><br>
-    <button id="playBtn">▶ Play</button>
-  </div>
+<main class="w-full pt-20 pb-16 px-4 md:px-8 max-w-7xl mx-auto">
 
-  <!-- Chart -->
-  <div class="chart-section">
-    <canvas id="ndviChart"></canvas>
-    <div id="chart-status">Loading chart...</div>
+    <!-- Globe Section -->
+    <section class="relative w-full rounded-3xl overflow-hidden shadow-2xl mb-12 bg-gray-900">
+        <div id="globeViz" class="w-full h-[70vh] md:h-[80vh]"></div>
+        <div id="sliderContainer" class="absolute bottom-6 left-1/2 -translate-x-1/2 w-full max-w-2xl px-4 text-center">
+            <span id="monthLabel" class="text-xl font-bold text-gray-200">January</span>
+            <input type="range" id="monthSlider" min="0" max="11" step="1" value="0" class="w-full h-2 bg-pink-400 rounded-lg appearance-none cursor-pointer mt-2">
+            <button id="playBtn" class="mt-4 px-6 py-2 bg-pink-500 hover:bg-pink-600 transition-colors text-white font-bold rounded-full shadow-lg">▶ Play</button>
+        </div>
+    </section>
 
-    <div id="ai-prediction-section">
-      <h3>AI Prediction</h3>
-      <div id="ai-response-container">AI responses will appear here.</div>
-      <div id="selected-month-info" style="display:none; margin-top:8px;">
-        <span>Selected Month: </span><span id="selected-month-text" style="color:#4fa1ff;"></span>
-        <button id="get-prediction-button" style="margin-left:10px; padding:4px 8px;">Get AI Prediction</button>
-      </div>
+    <!-- Main Content Grid: Chart/Info and Map -->
+    <section class="w-full grid grid-cols-1 lg:grid-cols-3 gap-8 mb-12">
+        
+        <!-- Left Column: Chart, AI, Upload -->
+        <div class="lg:col-span-1 space-y-8">
+            <!-- Chart Card -->
+            <div class="bg-gray-900 p-6 rounded-3xl shadow-2xl transition-all hover:shadow-pink-400/10">
+                <h3 class="text-2xl font-bold text-white mb-4">NDVI Trend & Prediction</h3>
+                <div class="h-64">
+                    <canvas id="ndviChart" class="hidden"></canvas>
+                    <div id="chart-status" class="flex items-center justify-center h-full text-gray-400">Loading chart...</div>
+                </div>
+            </div>
+
+            <!-- AI Prediction Section -->
+            <div class="bg-gray-900 p-6 rounded-3xl shadow-2xl transition-all hover:shadow-pink-400/10">
+                <h3 class="text-2xl font-bold text-white mb-4">AI Prediction</h3>
+                <div id="ai-response-container" class="bg-gray-800 text-gray-300 p-4 rounded-xl shadow-inner min-h-[5rem]">
+                    AI responses will appear here. Click a data point on the chart and then click "Get AI Prediction" for more info.
+                </div>
+                <div id="selected-month-info" class="mt-4 hidden">
+                    <span class="text-white font-bold">Selected Month: </span><span id="selected-month-text" class="text-pink-400"></span>
+                    <button id="get-prediction-button" class="ml-4 px-4 py-1.5 bg-pink-500 hover:bg-pink-600 transition-colors text-white font-bold rounded-full shadow-lg">Get AI Prediction</button>
+                </div>
+            </div>
+
+            <!-- Data Upload -->
+            <div class="bg-gray-900 p-6 rounded-3xl shadow-2xl transition-all hover:shadow-pink-400/10">
+                <h3 class="text-2xl font-bold text-white mb-4">Upload Data</h3>
+                <div class="flex flex-col space-y-2">
+                    <label for="hdf-file-input" class="block text-gray-300 font-medium">Upload a MODIS HDF file:</label>
+                    <input type="file" id="hdf-file-input" accept=".hdf" class="block w-full text-sm text-gray-500
+                        file:mr-4 file:py-2 file:px-4
+                        file:rounded-full file:border-0
+                        file:text-sm file:font-semibold
+                        file:bg-pink-50 file:text-pink-700
+                        hover:file:bg-pink-100 cursor-pointer transition-colors
+                    ">
+                    <p id="upload-status-message" class="text-sm text-gray-500 mt-2"></p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Right Column: Map -->
+        <div class="lg:col-span-2 rounded-3xl overflow-hidden shadow-2xl">
+            <div id="map" class="w-full h-full"></div>
+        </div>
+    </section>
+
+    <!-- Footer Strip -->
+    <div class="strip w-full bg-gray-900 py-6 px-8 text-center rounded-3xl shadow-xl">
+        <h2 class="text-xl md:text-2xl font-semibold">Connecting science with practical applications and insights.</h2>
     </div>
-
-    <div style="margin-top:20px;">
-      <label for="hdf-file-input">Upload a MODIS HDF file:</label>
-      <input type="file" id="hdf-file-input" accept=".hdf">
-      <p id="upload-status-message"></p>
-    </div>
-  </div>
-
-  <!-- Map -->
-  <div id="map"></div>
 
 </main>
-
-<div class="strip">Connecting science with practical applications and insights.</div>
 
 <script>
 /* ---------------- GLOBE ---------------- */
@@ -211,8 +235,8 @@ function updateChart(locationName){
     type:'line',
     data:{labels:allDates.map(d=>d.toLocaleString('default',{month:'short',year:'numeric'})),
       datasets:[
-        {label:'Historical NDVI', data:chartData.ndvi, borderColor:'#2ca02c', backgroundColor:'rgba(44,160,44,0.2)', pointBackgroundColor:'#2ca02c', borderWidth:2, pointRadius:3, fill:false, tension:0.4},
-        {label:'Predicted NDVI', data:allNDVI, borderColor:'#ff7f0e', backgroundColor:'rgba(255,127,14,0.2)', pointBackgroundColor:'#ff7f0e', borderWidth:2, pointRadius:3, fill:false, borderDash:[5,5], tension:0.4, pointStyle:(context)=>{const index=context.dataIndex; return index<=lastHistoricalIndex?'circle':'star';}}
+        {label:'Historical NDVI', data:chartData.ndvi, borderColor:'#8b5cf6', backgroundColor:'rgba(139,92,246,0.2)', pointBackgroundColor:'#8b5cf6', borderWidth:2, pointRadius:3, fill:false, tension:0.4},
+        {label:'Predicted NDVI', data:allNDVI, borderColor:'#ec4899', backgroundColor:'rgba(236,72,153,0.2)', pointBackgroundColor:'#ec4899', borderWidth:2, pointRadius:3, fill:false, borderDash:[5,5], tension:0.4, pointStyle:(context)=>{const index=context.dataIndex; return index<=lastHistoricalIndex?'circle':'star';}}
       ]},
     options:{responsive:true, maintainAspectRatio:false, scales:{x:{ticks:{color:'#9ca3af'}, grid:{color:'rgba(156,163,175,0.1)'}}, y:{min:0,max:1,ticks:{color:'#9ca3af'}, grid:{color:'rgba(156,163,175,0.1)'}}}, plugins:{legend:{labels:{color:'#e5e7eb'}}, tooltip:{backgroundColor:'rgba(31,41,55,0.8)',titleColor:'#e5e7eb',bodyColor:'#9ca3af'}}, onClick:handleChartClick}});
   const infoPanel=document.getElementById('data-visualization-info'); if(infoPanel) infoPanel.innerHTML=`<h3>${locationName}</h3><p>Click a data point to get an AI prediction.</p>`;

@@ -2,6 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Astrobloom Interactive Globe</title>
     <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;700&display=swap" rel="stylesheet">
     <script src="https://cdn.tailwindcss.com"></script>
@@ -25,6 +26,7 @@
         #globeViz {
             width: 100%;
             height: 100%;
+            cursor: grab;
         }
         #dataVizContainer {
             padding: 2rem;
@@ -111,6 +113,10 @@
             <div id="data-visualization-info" class="text-gray-400 mb-6">
                 <p>Click a marker on the map or a button below to see its NDVI trend and prediction.</p>
             </div>
+            
+            <!-- Map container added here for the Leaflet map to be visible -->
+            <div id="map"></div>
+            
             <div class="chart-card">
                 <h3 class="text-lg font-semibold text-white/90 mb-2">NDVI Trend & Prediction</h3>
                 <div id="chart-container-wrapper" class="chart-container flex justify-center items-center">
@@ -159,7 +165,7 @@
     <script src="https://unpkg.com/globe.gl"></script>
 
     <script>
-        // Globe data and logic (from the first HTML file)
+        // Globe data and logic
         const monthNames = ["January","February","March","April","May","June","July","August","September","October","November","December"];
         const bloomData = [];
         function addBloom(lat, lng, month, info, count=10, spread=3) {
@@ -182,7 +188,7 @@
             addBloom(-18.9,47.5,i,{color,label:"Madagascar",species:"Baobab and Traveler's Palm",note:"Unique flora; blooms influence lemur feeding and pollination."},15,5);
         });
         ["#ff1493","#ff1493","#ff8c00","#b22222","#b22222","#778899","#87ceeb","#ffb6c1","#ffff00","#e3e54eff","#cb84c9ff","#b52212ff"].forEach((color,i)=>{
-            addBloom(-40.9,174.9,i,{color,label:"New Zealand Bloom",species:"Kōwhai and Pohutukawa",note:"Seasonal shifts vital for native birds like tui and bellbirds."},15,5);
+            addBloom(-40.9,174.9,i,{color,label:"New Zealand",species:"Kōwhai and Pohutukawa",note:"Seasonal shifts vital for native birds like tui and bellbirds."},15,5);
         });
         ["#ebe41fff","#efa3eeff","#e28ee8ff","#ef6caeff","#ea9cd4ff","#da48c2ff","#ffffff","#ff4500","#ea8ecbff","#edaa92ff","#eea58bff","#e69a87ff"].forEach((color,i)=>{
             addBloom(-17.7,178.1,i,{color,label:"Fiji",species:"Hibiscus and Breadfruit",note:"Blooms tied to rainfall cycles; important for pollinators and agriculture."},15,5);
@@ -231,17 +237,55 @@
             }
         });
 
-        // NDVI chart logic (from the second HTML file)
+        // NDVI chart and AI logic
         const locations = {
-            "Japan": {"lat": 36.2048, "lon": 138.2529},
-            "Alaska": {"lat": 64.2008, "lon": -149.4937},
-            "Madagascar": {"lat": -18.7669, "lon": 46.8691},
-            "New Zealand": {"lat": -40.9006, "lon": 174.8860},
-            "Fiji": {"lat": -17.7134, "lon": 178.0650}
+            "Japan": {"lat": 36.2048, "lon": 138.2529, "species": "Cherry Blossom - Sakura"},
+            "Alaska": {"lat": 64.2008, "lon": -149.4937, "species": "Lupine and Arctic Poppy"},
+            "Madagascar": {"lat": -18.7669, "lon": 46.8691, "species": "Baobab and Traveler's Palm"},
+            "New Zealand": {"lat": -40.9006, "lon": 174.8860, "species": "Kōwhai and Pohutukawa"},
+            "Fiji": {"lat": -17.7134, "lon": 178.0650, "species": "Hibiscus and Breadfruit"}
         };
         let currentLocation = 'Japan';
         let myChart;
         let selectedDataPointIndex = null;
+        
+        async function getAIPrediction(prompt) {
+            const aiResponseContainer = document.getElementById('ai-response-container');
+            aiResponseContainer.innerHTML = `<div class="loader mx-auto"></div> <span class="block text-center mt-2 text-gray-400">Thinking...</span>`;
+            
+            const payload = {
+                contents: [{ parts: [{ text: prompt }] }],
+                tools: [{ "google_search": {} }],
+                systemInstruction: {
+                    parts: [{ text: "Act as a world-class remote sensing and environmental data analyst. Provide a concise, single-paragraph summary explaining the vegetation health and factors influencing it for the requested location and time, based on the provided NDVI data." }]
+                },
+            };
+            const apiKey = "";
+            const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key=${apiKey}`;
+            
+            try {
+                const response = await fetch(apiUrl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                if (!response.ok) {
+                    throw new Error(`API call failed with status: ${response.status}`);
+                }
+                const result = await response.json();
+                const candidate = result.candidates?.[0];
+                if (candidate && candidate.content?.parts?.[0]?.text) {
+                    aiResponseContainer.textContent = candidate.content.parts[0].text;
+                } else {
+                    aiResponseContainer.textContent = "Sorry, I could not generate a prediction for that data. Please try again.";
+                    console.error("API response was not in the expected format.");
+                }
+            } catch (error) {
+                console.error("Error fetching AI prediction:", error);
+                aiResponseContainer.textContent = "An error occurred while fetching the AI prediction. Please check your network connection and try again.";
+            }
+        }
+
         function generateNDVIDataForLocation(locationName, startDate, numMonths) {
             const dates = [];
             const ndvi = [];
@@ -294,7 +338,7 @@
             for (let i = 0; i < n; i++) {
                 sumX += xMonths[i];
                 sumY += chartData.ndvi[i];
-                sumXY += xMonths[i] * chartData.ndvi[i];
+                sumXY += xMonths[i] * chartData[i];
                 sumX2 += xMonths[i] * xMonths[i];
             }
             const m = (n * sumXY - sumX * sumY) / (n * sumX2 - sumX * sumX);
@@ -393,6 +437,14 @@
                 const selectedMonthText = document.getElementById('selected-month-text');
                 selectedMonthText.textContent = label;
                 selectedMonthInfo.classList.remove('hidden');
+                
+                const getPredictionButton = document.getElementById('get-prediction-button');
+                if (firstPoint.datasetIndex === 1) {
+                     getPredictionButton.textContent = 'Get AI Prediction';
+                } else {
+                     getPredictionButton.textContent = 'Get AI Analysis';
+                }
+                selectedMonthInfo.classList.remove('hidden');
             }
         }
         function getPredictionForSelectedMonth() {
@@ -401,20 +453,15 @@
                 return;
             }
             const selectedMonth = myChart.data.labels[selectedDataPointIndex];
-            const selectedValue = myChart.data.datasets[0].data[selectedDataPointIndex];
-            const aiResponseContainer = document.getElementById('ai-response-container');
-            aiResponseContainer.innerHTML = `<div class="loader mx-auto"></div> <span class="block text-center mt-2 text-gray-400">Thinking...</span>`;
-            setTimeout(() => {
-                const location = currentLocation;
-                let response = "";
-                if (myChart.data.datasets[1].data[selectedDataPointIndex] !== undefined && selectedDataPointIndex >= myChart.data.datasets[0].data.length) {
-                    const predictedValue = myChart.data.datasets[1].data[selectedDataPointIndex];
-                    response = `For ${location}, the AI predicts a Normalized Difference Vegetation Index (NDVI) of approximately ${predictedValue.toFixed(2)} in ${selectedMonth}. This is a predicted value based on an analysis of past trends and seasonal cycles.`;
-                } else {
-                    response = `For ${selectedMonth} in ${location}, the historical NDVI value was approximately ${selectedValue.toFixed(2)}. This value is a historical measurement from our satellite data.`;
-                }
-                aiResponseContainer.innerHTML = response;
-            }, 1500);
+            const isHistorical = myChart.data.datasets[0].data[selectedDataPointIndex] !== undefined && selectedDataPointIndex < myChart.data.datasets[0].data.length;
+            const value = isHistorical 
+                          ? myChart.data.datasets[0].data[selectedDataPointIndex]
+                          : myChart.data.datasets[1].data[selectedDataPointIndex];
+            const location = currentLocation;
+            const species = locations[location].species;
+            const type = isHistorical ? 'historical' : 'predicted';
+            const prompt = `Based on the ${type} NDVI value of ${value.toFixed(2)} for ${selectedMonth} in ${location}, provide an analysis of the vegetation health. The prominent plant life there includes ${species}. Explain what this NDVI value might indicate about the plant growth, any potential environmental factors influencing it, and the overall state of the ecosystem for that period.`;
+            getAIPrediction(prompt);
         }
         function initMap() {
             if (typeof L === 'undefined') { console.error("Leaflet.js not loaded. Map cannot be initialized."); return; }
@@ -428,7 +475,11 @@
                 const coords = locations[loc];
                 const marker = L.marker([coords.lat, coords.lon]).addTo(map);
                 marker.bindPopup(loc);
-                marker.on('click', () => { updateChart(loc); });
+                marker.on('click', () => { 
+                    updateChart(loc);
+                    // Fly the globe to the selected location
+                    GlobeObj.pointOfView({ lat: coords.lat, lng: coords.lon, altitude: 2 }, 2000); 
+                });
             }
         }
         function createCountryButtons() {
@@ -438,7 +489,12 @@
                 const button = document.createElement('button');
                 button.textContent = loc;
                 button.className = 'bg-gray-800 text-gray-300 py-2 px-4 rounded-full transition-colors duration-200 hover:bg-[#d84594] hover:text-white focus:outline-none focus:ring-2 focus:ring-[#ffc0cb] focus:ring-opacity-50';
-                button.addEventListener('click', () => { updateChart(loc); });
+                button.addEventListener('click', () => { 
+                    updateChart(loc); 
+                    // Fly the globe to the selected location
+                    const coords = locations[loc];
+                    GlobeObj.pointOfView({ lat: coords.lat, lng: coords.lon, altitude: 2 }, 2000); 
+                });
                 buttonContainer.appendChild(button);
             });
         }

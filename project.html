@@ -283,6 +283,8 @@
 
         const globeElement = document.getElementById('globeViz');
         GlobeObj(globeElement);
+        // Make the renderer's background transparent to remove the black border
+        GlobeObj.renderer().setClearAlpha(0);
         GlobeObj.controls().autoRotate = true;
         GlobeObj.controls().autoRotateSpeed = 0.2;
 

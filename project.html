@@ -7,114 +7,90 @@
 <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;700&display=swap" rel="stylesheet">
 <script src="https://cdn.tailwindcss.com"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
-<script src="https://unpkg.com/three"></script>
-<script src="https://unpkg.com/globe.gl"></script>
 <style>
-    body {
-        margin: 0;
-        font-family: 'Syne', sans-serif;
-        background: #0d0d0d;
-        color: #e5e7eb;
-    }
-
-    #mainContainer {
-        display: flex;
-        flex-direction: row;
-        height: 100vh;
-        width: 100vw;
-    }
-
-    #globeViz {
-        flex: 1;
-        background: transparent;
-    }
-
-    #dataVizContainer {
-        flex: 1;
-        padding: 2rem;
-        overflow-y: auto;
-        background: #111;
-        display: flex;
-        flex-direction: column;
-        gap: 2rem;
-    }
-
-    .chart-card {
-        background-color: #1a1a1a;
-        border-radius: 1rem;
-        padding: 1.5rem;
-        box-shadow: 0 4px 6px rgba(0,0,0,0.2);
-    }
-
-    .chart-container {
-        position: relative;
-        height: 300px;
-    }
-
-    #map {
-        height: 300px;
-        border-radius: 1rem;
-        margin-bottom: 1.5rem;
-        box-shadow: 0 4px 6px rgba(0,0,0,0.2);
-    }
-
-    #sliderContainer {
-        position: absolute;
-        bottom: 20px;
-        left: 20px;
-        width: 40%;
-        text-align: center;
-        color: white;
-        font-size: 1.1rem;
-        background: rgba(0,0,0,0.5);
-        padding: 10px;
-        border-radius: 10px;
-    }
-
-    input[type="range"] {
-        width: 80%;
-        -webkit-appearance: none;
-        height: 8px;
-        background: #d84594;
-        outline: none;
-        border-radius: 5px;
-        margin-top: 10px;
-    }
-
-    input[type="range"]::-webkit-slider-thumb {
-        -webkit-appearance: none;
-        width: 20px;
-        height: 20px;
-        background: #ffc0cb;
-        border-radius: 50%;
-        cursor: pointer;
-    }
-
-    #playBtn {
-        margin-top: 10px;
-        padding: 8px 16px;
-        font-size: 1em;
-        cursor: pointer;
-        border-radius: 8px;
-        border: none;
-        background: #d84594;
-        color: white;
-    }
-
-    .loader {
-        border: 4px solid #333;
-        border-top: 4px solid #d84594;
-        border-radius: 50%;
-        width: 30px;
-        height: 30px;
-        animation: spin 1s linear infinite;
-        margin: auto;
-    }
-
-    @keyframes spin {
-        0% { transform: rotate(0deg); }
-        100% { transform: rotate(360deg); }
-    }
+body {
+    margin: 0;
+    font-family: 'Syne', sans-serif;
+    background: #0b0b0b;
+    color: #e5e7eb;
+    overflow: hidden;
+}
+#mainContainer {
+    display: flex;
+    height: 100vh;
+    width: 100vw;
+}
+#globeViz {
+    flex: 1;
+    height: 100%;
+}
+#dataVizContainer {
+    flex: 1;
+    padding: 2rem;
+    overflow-y: auto;
+    background: #0d0d0d;
+    display: flex;
+    flex-direction: column;
+}
+.chart-card {
+    background-color: #1a1a1a;
+    border-radius: 1rem;
+    padding: 1.5rem;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+    margin-top: 1.5rem;
+}
+#sliderContainer {
+    position: absolute;
+    bottom: 20px;
+    left: 20px;
+    width: 40%;
+    text-align: center;
+    color: white;
+    font-size: 1.2em;
+    background: rgba(0,0,0,0.5);
+    padding: 10px;
+    border-radius: 10px;
+}
+input[type="range"] {
+    width: 80%;
+    -webkit-appearance: none;
+    height: 8px;
+    background: #d84594;
+    outline: none;
+    border-radius: 5px;
+    margin-top: 10px;
+}
+input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 20px;
+    height: 20px;
+    background: #ffc0cb;
+    cursor: pointer;
+    border-radius: 50%;
+}
+#playBtn {
+    margin-top: 10px;
+    padding: 8px 16px;
+    font-size: 1em;
+    cursor: pointer;
+    border-radius: 8px;
+    border: none;
+    background: #d84594;
+    color: white;
+}
+.loader {
+    border: 4px solid #333;
+    border-top: 4px solid #d84594;
+    border-radius: 50%;
+    width: 30px;
+    height: 30px;
+    animation: spin 1s linear infinite;
+    margin: auto;
+}
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
 </style>
 </head>
 <body>
@@ -122,32 +98,27 @@
 <div id="mainContainer">
     <div id="globeViz"></div>
     <div id="dataVizContainer">
-        <h1 class="text-4xl font-bold text-[#ffc0cb]">AstroBloom</h1>
-        <p class="text-gray-400">Explore seasonal vegetation bloom around the world.</p>
-
-        <div id="map"></div>
-
+        <h1 class="text-4xl font-bold mb-6 text-[#ffc0cb]">AstroBloom: The Pulse of Life</h1>
+        <div id="data-visualization-info" class="text-gray-400 mb-6">
+            Click a country button below to see its NDVI trend and prediction.
+        </div>
         <div class="chart-card">
             <h3 class="text-lg font-semibold text-white/90 mb-2">NDVI Trend & Prediction</h3>
-            <div class="chart-container">
-                <canvas id="ndviChart" class="hidden"></canvas>
-                <div id="chart-status" class="text-gray-400">Loading chart...</div>
-            </div>
+            <canvas id="ndviChart"></canvas>
         </div>
-
-        <div class="chart-card">
-            <h3 class="text-lg font-semibold text-white/90 mb-2">AI Prediction</h3>
-            <div id="ai-response-container" class="bg-black text-gray-300 p-4 rounded-lg min-h-[5rem]">
-                AI responses will appear here.
+        <div id="ai-prediction-section" class="pt-6">
+            <h3 class="text-2xl font-bold text-white/90 mb-2">AI Prediction</h3>
+            <div id="ai-response-container" class="bg-black text-gray-300 p-4 rounded-lg shadow-inner min-h-[5rem]">
+                AI responses will appear here. Click a data point on the chart and then click "Get AI Prediction".
             </div>
             <div id="selected-month-info" class="mt-4 hidden">
-                <span class="text-white font-medium">Selected Month: </span><span id="selected-month-text" class="text-[#ffc0cb]"></span>
+                <span class="text-white font-medium">Selected Month: </span>
+                <span id="selected-month-text" class="text-[#ffc0cb]"></span>
                 <button id="get-prediction-button" class="ml-4 bg-[#d84594] text-white py-1 px-3 rounded-full hover:bg-[#ffc0cb] hover:text-black transition-colors">Get AI Prediction</button>
             </div>
         </div>
-
-        <div class="chart-card">
-            <h3 class="text-lg font-semibold text-white/90 mb-2">Select a Country</h3>
+        <div class="pt-6">
+            <h3 class="text-xl font-semibold text-white/90 mb-4">Select a Country</h3>
             <div id="country-buttons-container" class="grid grid-cols-2 md:grid-cols-3 gap-3"></div>
         </div>
     </div>
@@ -159,77 +130,141 @@
     <button id="playBtn">▶ Play</button>
 </div>
 
+<script src="https://unpkg.com/three"></script>
+<script src="https://unpkg.com/globe.gl"></script>
 <script>
-    // --- Globe setup ---
-    const monthNames = ["January","February","March","April","May","June","July","August","September","October","November","December"];
-    const bloomData = [];
-
-    function addBloom(lat, lng, month, info, count=10, spread=3) {
-        for (let i=0;i<count;i++){
-            bloomData.push({
-                lat: lat + (Math.random()-0.5)*spread,
-                lng: lng + (Math.random()-0.5)*spread,
-                month,
-                ...info
-            });
-        }
+const monthNames = ["January","February","March","April","May","June","July","August","September","October","November","December"];
+const bloomData = [];
+function addBloom(lat, lng, month, info, count=10, spread=3){
+    for(let i=0;i<count;i++){
+        bloomData.push({
+            lat:lat+(Math.random()-0.5)*spread,
+            lng:lng+(Math.random()-0.5)*spread,
+            month,
+            ...info
+        });
     }
+}
+// Sample data
+["#e8eb49ff","#f5a2acff","#f484d4ff","#e647b9ff","#ab8aecff","#d56de3ff","#e898ecff","#f399f0ff","#de4242ff","#c27d37ff","#e16473ff","#f1ebb2ff"].forEach((color,i)=>{
+    addBloom(36.2,138.2,i,{color,label:"Japan",species:"Cherry Blossom - Sakura",note:"Cultural symbol, peak bloom in spring; critical for pollinators."},15,5);
+});
+["#83b1ddff","#649ac8ff","#a2d7ecff","#6a5acd","#8f2da0ff","#d25db9ff","#cad239ff","#d9eaa5ff","#94dee1ff","#5cabcaff","#34879eff","#4b6cb1ff"].forEach((color,i)=>{
+    addBloom(64.2,-149.5,i,{color,label:"Alaska",species:"Lupine and Arctic Poppy",note:"Short growing season; blooms support insects."},12,6);
+});
+// Add more locations similarly...
 
-    // Example bloom data for Japan
-    ["#e8eb49ff","#f5a2acff","#f484d4ff","#e647b9ff","#ab8aecff","#d56de3ff","#e898ecff","#f399f0ff","#de4242ff","#c27d37ff","#e16473ff","#f1ebb2ff"].forEach((color,i)=>{
-        addBloom(36.2,138.2,i,{color,label:"Japan",species:"Cherry Blossom - Sakura",note:"Peak bloom in spring."},15,5);
-    });
+const GlobeObj = Globe()
+.globeImageUrl(null) // Transparent background
+.pointAltitude(d => 0.02 + 0.02*Math.sin(Date.now()*0.005 + d.lat))
+.pointRadius(0.4)
+.pointColor(d => d.color)
+.pointLabel(d => `<b>${d.label}</b><br><i>${d.species}</i><br>${d.note}`);
 
-    const GlobeObj = Globe()
-        .globeImageUrl(null) // transparent globe
-        .backgroundColor('rgba(0,0,0,0)') // transparent
-        .pointAltitude(d => 0.02 + 0.02*Math.sin(Date.now()*0.005 + d.lat))
-        .pointRadius(0.4)
-        .pointColor(d => d.color)
-        .pointLabel(d => `<b>${d.label}</b><br><i>${d.species}</i><br>${d.note}`);
+GlobeObj(document.getElementById('globeViz')).controls().autoRotate=true;
+GlobeObj.controls().autoRotateSpeed=0.2;
 
-    GlobeObj(document.getElementById('globeViz'));
-    GlobeObj.controls().autoRotate = true;
-    GlobeObj.controls().autoRotateSpeed = 0.2;
+const slider=document.getElementById("monthSlider");
+const label=document.getElementById("monthLabel");
+function updateGlobe(monthIndex){
+    label.textContent = monthNames[monthIndex];
+    const filtered=bloomData.filter(d=>d.month===monthIndex);
+    GlobeObj.pointsData(filtered);
+}
+updateGlobe(0);
+slider.addEventListener("input",e=>updateGlobe(parseInt(e.target.value)));
+(function animate(){
+    GlobeObj.pointAltitude(d=>0.02+0.02*Math.sin(Date.now()*0.005+d.lat));
+    requestAnimationFrame(animate);
+})();
 
-    const slider = document.getElementById("monthSlider");
-    const label = document.getElementById("monthLabel");
-
-    function updateGlobe(monthIndex){
-        label.textContent = monthNames[monthIndex];
-        const filtered = bloomData.filter(d => d.month === monthIndex);
-        GlobeObj.pointsData(filtered);
+let isPlaying=false;
+let playInterval;
+document.getElementById("playBtn").addEventListener("click",()=>{
+    if(!isPlaying){
+        isPlaying=true;
+        document.getElementById("playBtn").textContent="⏸ Pause";
+        playInterval=setInterval(()=>{
+            let nextMonth=(parseInt(slider.value)+1)%12;
+            slider.value=nextMonth;
+            updateGlobe(nextMonth);
+        },1000);
+    } else {
+        isPlaying=false;
+        document.getElementById("playBtn").textContent="▶ Play";
+        clearInterval(playInterval);
     }
+});
 
-    updateGlobe(0);
+// --- NDVI Chart ---
+const locations={"Japan":{lat:36.2048,lon:138.2529,species:"Cherry Blossom - Sakura"},"Alaska":{lat:64.2008,lon:-149.4937,species:"Lupine and Arctic Poppy"}};
+let currentLocation='Japan';
+let myChart;
+let selectedDataPointIndex=null;
 
-    slider.addEventListener("input", e => updateGlobe(parseInt(e.target.value)));
-
-    (function animate(){
-        GlobeObj.pointAltitude(d => 0.02 + 0.02*Math.sin(Date.now()*0.005 + d.lat));
-        requestAnimationFrame(animate);
-    })();
-
-    // Play button
-    let isPlaying = false;
-    let playInterval;
-    const playBtn = document.getElementById("playBtn");
-    playBtn.addEventListener("click", ()=>{
-        if (!isPlaying){
-            isPlaying = true;
-            playBtn.textContent = "⏸ Pause";
-            playInterval = setInterval(()=>{
-                let nextMonth = (parseInt(slider.value)+1)%12;
-                slider.value = nextMonth;
-                updateGlobe(nextMonth);
-            },1000);
-        } else {
-            isPlaying = false;
-            playBtn.textContent = "▶ Play";
-            clearInterval(playInterval);
-        }
+function generateNDVIDataForLocation(locationName,startDate,numMonths){
+    const dates=[]; const ndvi=[];
+    const start=new Date(startDate); let seasonalFactor,baseValue;
+    switch(locationName){
+        case"Japan": baseValue=0.45; seasonalFactor=0.25; break;
+        case"Alaska": baseValue=0.2; seasonalFactor=0.6; break;
+        default: baseValue=0.5; seasonalFactor=0.2;
+    }
+    for(let i=0;i<numMonths;i++){
+        const date=new Date(start.getFullYear(),start.getMonth()+i,1);
+        dates.push(date);
+        let month=date.getMonth();
+        if(locationName==="New Zealand"){month=(month+6)%12;}
+        const value=baseValue+seasonalFactor*Math.sin(month*(Math.PI/6))+0.03*(Math.random()-0.5);
+        ndvi.push(Math.max(0,Math.min(1,value)));
+    }
+    return {dates,ndvi};
+}
+let fetchedNDVIData={};
+function fetchDataAndLoad(){
+    const ndviData={};
+    const numMonths=60;
+    for(const loc in locations){ndviData[loc]=generateNDVIDataForLocation(loc,'2018-01-01',numMonths);}
+    fetchedNDVIData=ndviData;
+}
+function updateChart(locationName){
+    currentLocation=locationName;
+    const chartData=fetchedNDVIData[locationName]; if(!chartData)return;
+    const ctx=document.getElementById('ndviChart').getContext('2d');
+    if(myChart) myChart.destroy();
+    myChart=new Chart(ctx,{
+        type:'line',
+        data:{
+            labels:chartData.dates.map(d=>d.toLocaleString('default',{month:'short',year:'numeric'})),
+            datasets:[{
+                label:'NDVI',
+                data:chartData.ndvi,
+                borderColor:'#2ca02c',
+                backgroundColor:'rgba(44,160,44,0.2)',
+                pointBackgroundColor:'#2ca02c',
+                borderWidth:2,
+                pointRadius:3,
+                fill:false,
+                tension:0.4
+            }]
+        },
+        options:{responsive:true,maintainAspectRatio:false,scales:{x:{ticks:{color:'#9ca3af'},grid:{color:'rgba(156,163,175,0.1)'}},y:{min:0,max:1,ticks:{color:'#9ca3af'},grid:{color:'rgba(156,163,175,0.1)'}}},plugins:{legend:{labels:{color:'#e5e7eb'}}}}
     });
+    document.getElementById('data-visualization-info').innerHTML=`<h3 class="text-xl font-semibold text-white/90 mb-2">${locationName}</h3>`;
+}
+
+window.onload=()=>{
+    fetchDataAndLoad();
+    updateChart('Japan');
+    const container=document.getElementById('country-buttons-container');
+    Object.keys(locations).forEach(loc=>{
+        const btn=document.createElement('button');
+        btn.textContent=loc;
+        btn.className='bg-[#d84594] text-white py-1 px-3 rounded-full hover:bg-[#ffc0cb] hover:text-black transition-colors';
+        btn.addEventListener('click',()=>{updateChart(loc);});
+        container.appendChild(btn);
+    });
+};
 </script>
-
 </body>
 </html>

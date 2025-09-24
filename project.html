@@ -22,14 +22,13 @@
             color: #e5e7eb;
         }
         
-        /* Container for the globe and chart */
+        /* Container for the globe and chart to be side-by-side */
         .top-section {
             display: flex;
             flex-direction: column;
             align-items: center;
             padding: 1rem;
             width: 100%;
-            position: relative;
         }
 
         @media (min-width: 1024px) {
@@ -60,6 +59,7 @@
             width: 100%;
             height: 50vh;
             max-width: 600px;
+            overflow-y: hidden; /* Prevents vertical scrolling on the chart */
         }
         
         @media (min-width: 1024px) {
@@ -177,10 +177,10 @@
 
     <!-- Globe and Chart Section -->
     <div class="top-section">
-        <div id="globeViz"></div>
+        <div id="globeViz" class="relative"></div>
         <div class="chart-container flex items-center justify-center">
-            <div id="chart-status" class="text-gray-400">Loading chart...</div>
-            <canvas id="ndviChart" class="hidden"></canvas>
+            <canvas id="ndviChart" class="w-full h-full"></canvas>
+            <div id="chart-status" class="absolute text-gray-400">Loading chart...</div>
         </div>
     </div>
     
@@ -196,7 +196,7 @@
         <div class="p-6 bg-[#1f1f1f] rounded-2xl shadow-xl space-y-6">
             <h2 class="text-2xl font-bold text-white/90">AI Prediction</h2>
             <div id="ai-response-container" class="bg-black text-gray-300 p-4 rounded-lg shadow-inner min-h-[5rem]">
-                AI responses will appear here. Click a data point on the chart and then click "Get AI Prediction" for more info.
+                AI predictions will appear here. Click on a data point in the chart and then click "Get AI Prediction".
             </div>
             <div id="selected-month-info" class="mt-4 hidden">
                 <span class="text-white font-medium">Selected Month: </span><span id="selected-month-text" class="text-[#ab8aecff]"></span>
@@ -205,7 +205,7 @@
         </div>
         
         <div class="p-6 bg-[#1f1f1f] rounded-2xl shadow-xl space-y-6">
-            <h3 class="text-xl font-semibold text-white/90 mb-4">Select a Country</h3>
+            <h3 class="text-xl font-semibold text-white/90 mb-4 text-center">Select a Country</h3>
             <div id="country-buttons-container" class="grid grid-cols-2 md:grid-cols-5 gap-3">
             </div>
         </div>
@@ -286,7 +286,9 @@
             }, 15, 5);
         });
 
-        const GlobeObj = Globe()
+        const GlobeObj = Globe({
+            rendererConfig: { alpha: true } // Make the renderer transparent
+        })
             .globeImageUrl('//unpkg.com/three-globe/example/img/earth-blue-marble.jpg')
             .pointAltitude(d => 0.02 + 0.02 * Math.sin(Date.now() * 0.005 + d.lat))
             .pointRadius(0.4)
@@ -296,6 +298,9 @@
                 <i>${d.species}</i><br>
                 ${d.note}
             `);
+        
+        // Remove the globe image to make the background transparent
+        GlobeObj.globeImageUrl(null);
 
         const globeElement = document.getElementById('globeViz');
         GlobeObj(globeElement);
@@ -416,7 +421,6 @@
             const chartData = fetchedNDVIData[locationName];
             if (!chartData) return;
 
-            document.getElementById('ndviChart').classList.remove('hidden');
             document.getElementById('chart-status').style.display = 'none';
 
             const monthlyAverages = new Array(12).fill(0);
@@ -552,11 +556,6 @@
                 }
             });
             
-            const infoPanel = document.getElementById('data-visualization-info');
-            infoPanel.innerHTML = `
-                <h3 class="text-xl font-semibold text-white/90 mb-2">${locationName}</h3>
-                <p class="text-gray-400">Click on a data point to get an AI prediction for that month.</p>
-            `;
             const selectedMonthInfo = document.getElementById('selected-month-info');
             selectedMonthInfo.classList.add('hidden');
         }
@@ -566,7 +565,6 @@
             if (points.length) {
                 const firstPoint = points[0];
                 const label = myChart.data.labels[firstPoint.index];
-                const value = myChart.data.datasets[0].data[firstPoint.index];
                 
                 selectedDataPointIndex = firstPoint.index;
                 const selectedMonthInfo = document.getElementById('selected-month-info');
@@ -620,7 +618,6 @@
         
         window.onload = async () => {
             const chartStatus = document.getElementById('chart-status');
-            const ndviChart = document.getElementById('ndviChart');
             const hdfFileInput = document.getElementById('hdf-file-input');
             const uploadStatusMessage = document.getElementById('upload-status-message');
             const getPredictionButton = document.getElementById('get-prediction-button');
@@ -633,7 +630,7 @@
             try {
                 chartStatus.textContent = "Fetching data...";
                 fetchedNDVIData = await fetchDataAndLoad();
-                chartStatus.textContent = "Data loaded.";
+                chartStatus.style.display = 'none';
             } catch (error) {
                 chartStatus.textContent = "Failed to load data. Please check the console for errors.";
                 console.error("Initialization error:", error);

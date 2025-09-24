@@ -25,7 +25,7 @@
         /* Container for the globe and chart to be side-by-side */
         .top-section {
             display: flex;
-            flex-direction: column;
+            flex-direction: column; /* Default to column for small screens */
             align-items: center;
             padding: 1rem;
             width: 100%;
@@ -33,7 +33,7 @@
 
         @media (min-width: 1024px) {
             .top-section {
-                flex-direction: row;
+                flex-direction: row; /* Switch to row for large screens */
                 justify-content: center;
                 align-items: flex-start;
                 padding: 2rem;
@@ -165,18 +165,8 @@
 </head>
 <body class="bg-[#0d0d0d] text-white overflow-y-auto">
 
-    <!-- Header -->
-    <header class="flex justify-between items-center py-4 px-8">
-        <h1 class="text-4xl font-bold text-white/90">AstroBloom</h1>
-        <nav>
-            <a href="#" class="text-white/70 hover:text-white mx-2 lg:mx-4">Home</a>
-            <a href="#" class="text-white/70 hover:text-white mx-2 lg:mx-4">Project</a>
-            <a href="#" class="text-white/70 hover:text-white mx-2 lg:mx-4">About</a>
-        </nav>
-    </header>
-
     <!-- Globe and Chart Section -->
-    <div class="top-section">
+    <div class="top-section lg:flex-row lg:justify-between">
         <div id="globeViz" class="relative"></div>
         <div class="chart-container flex items-center justify-center">
             <canvas id="ndviChart" class="w-full h-full"></canvas>
@@ -194,6 +184,12 @@
     <!-- Main Content Section -->
     <main class="main-content grid grid-cols-1 gap-8 mt-12">
         <div class="p-6 bg-[#1f1f1f] rounded-2xl shadow-xl space-y-6">
+            <h3 class="text-xl font-semibold text-white/90 mb-4 text-center">Select a Country</h3>
+            <div id="country-buttons-container" class="grid grid-cols-2 md:grid-cols-5 gap-3">
+            </div>
+        </div>
+        
+        <div class="p-6 bg-[#1f1f1f] rounded-2xl shadow-xl space-y-6">
             <h2 class="text-2xl font-bold text-white/90">AI Prediction</h2>
             <div id="ai-response-container" class="bg-black text-gray-300 p-4 rounded-lg shadow-inner min-h-[5rem]">
                 AI predictions will appear here. Click on a data point in the chart and then click "Get AI Prediction".
@@ -201,12 +197,6 @@
             <div id="selected-month-info" class="mt-4 hidden">
                 <span class="text-white font-medium">Selected Month: </span><span id="selected-month-text" class="text-[#ab8aecff]"></span>
                 <button id="get-prediction-button" class="ml-4 bg-[#ab8aecff] text-white py-1 px-3 rounded-full hover:bg-[#e647b9ff]">Get AI Prediction</button>
-            </div>
-        </div>
-        
-        <div class="p-6 bg-[#1f1f1f] rounded-2xl shadow-xl space-y-6">
-            <h3 class="text-xl font-semibold text-white/90 mb-4 text-center">Select a Country</h3>
-            <div id="country-buttons-container" class="grid grid-cols-2 md:grid-cols-5 gap-3">
             </div>
         </div>
         
@@ -287,7 +277,7 @@
         });
 
         const GlobeObj = Globe({
-            rendererConfig: { alpha: true } // Make the renderer transparent
+            rendererConfig: { alpha: true }
         })
             .globeImageUrl('//unpkg.com/three-globe/example/img/earth-blue-marble.jpg')
             .pointAltitude(d => 0.02 + 0.02 * Math.sin(Date.now() * 0.005 + d.lat))
@@ -299,8 +289,8 @@
                 ${d.note}
             `);
         
-        // Remove the globe image to make the background transparent
         GlobeObj.globeImageUrl(null);
+        GlobeObj.renderer().setClearColor(0x0d0d0d, 1); // Set the background to match the body
 
         const globeElement = document.getElementById('globeViz');
         GlobeObj(globeElement);

@@ -22,10 +22,10 @@
             color: #e5e7eb;
         }
         
-        /* Container for the globe and chart to be side-by-side */
+        /* Main container for the layout, switches from column to row on larger screens */
         .top-section {
             display: flex;
-            flex-direction: column; /* Default to column for small screens */
+            flex-direction: column; 
             align-items: center;
             padding: 1rem;
             width: 100%;
@@ -33,13 +33,14 @@
 
         @media (min-width: 1024px) {
             .top-section {
-                flex-direction: row; /* Switch to row for large screens */
+                flex-direction: row; 
                 justify-content: center;
                 align-items: flex-start;
                 padding: 2rem;
             }
         }
         
+        /* Globe container styling */
         #globeViz {
             width: 100%;
             height: 50vh;
@@ -55,11 +56,12 @@
             }
         }
 
+        /* Chart container styling */
         .chart-container {
             width: 100%;
             height: 50vh;
             max-width: 600px;
-            overflow-y: hidden; /* Prevents vertical scrolling on the chart */
+            overflow-y: hidden;
         }
         
         @media (min-width: 1024px) {
@@ -87,7 +89,7 @@
         }
         
         #playBtn {
-            background-color: #e647b9ff; /* Pink color */
+            background-color: #e647b9ff;
             color: white;
             padding: 0.5rem 1rem;
             border-radius: 9999px;
@@ -161,6 +163,27 @@
             max-width: 1200px;
             margin: 0 auto;
         }
+
+        /* New styling for the button container to make it pop */
+        .country-buttons-container {
+            background-color: #1a1a1a;
+            border: 2px solid #2d2d2d;
+            border-radius: 1rem;
+            padding: 1rem;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.4);
+        }
+        .country-button {
+            background-color: #3b3b3b;
+            color: #e5e7eb;
+            font-weight: bold;
+            padding: 0.75rem 1.5rem;
+            border-radius: 9999px;
+            transition: background-color 0.2s, transform 0.2s;
+        }
+        .country-button:hover {
+            background-color: #555555;
+            transform: translateY(-2px);
+        }
     </style>
 </head>
 <body class="bg-[#0d0d0d] text-white overflow-y-auto">
@@ -183,8 +206,8 @@
 
     <!-- Main Content Section -->
     <main class="main-content grid grid-cols-1 gap-8 mt-12">
-        <div class="p-6 bg-[#1f1f1f] rounded-2xl shadow-xl space-y-6">
-            <h3 class="text-xl font-semibold text-white/90 mb-4 text-center">Select a Country</h3>
+        <div class="p-6 country-buttons-container">
+            <h3 class="text-xl font-bold text-white/90 mb-4 text-center">Select a Country</h3>
             <div id="country-buttons-container" class="grid grid-cols-2 md:grid-cols-5 gap-3">
             </div>
         </div>
@@ -290,7 +313,7 @@
             `);
         
         GlobeObj.globeImageUrl(null);
-        GlobeObj.renderer().setClearColor(0x0d0d0d, 1); // Set the background to match the body
+        GlobeObj.renderer().setClearColor(0x0d0d0d, 1);
 
         const globeElement = document.getElementById('globeViz');
         GlobeObj(globeElement);
@@ -465,7 +488,7 @@
                         {
                             label: 'Historical NDVI',
                             data: chartData.ndvi,
-                            borderColor: '#e647b9ff', /* Pink color for historical data */
+                            borderColor: '#e647b9ff', 
                             backgroundColor: 'rgba(230, 71, 185, 0.2)',
                             pointBackgroundColor: '#e647b9ff',
                             borderWidth: 2,
@@ -476,7 +499,7 @@
                         {
                             label: 'Predicted NDVI',
                             data: allNDVI,
-                            borderColor: '#ab8aecff', /* Violet color for predicted data */
+                            borderColor: '#ab8aecff', 
                             backgroundColor: 'rgba(171, 142, 236, 0.2)',
                             pointBackgroundColor: '#ab8aecff',
                             borderWidth: 2,
@@ -598,7 +621,7 @@
             locationsArray.forEach(loc => {
                 const button = document.createElement('button');
                 button.textContent = loc;
-                button.className = 'bg-[#475569] text-white py-2 px-4 rounded-full transition-colors duration-200 hover:bg-[#64748b] focus:outline-none focus:ring-2 focus:ring-[#e647b9ff] focus:ring-opacity-50';
+                button.className = 'country-button';
                 button.addEventListener('click', () => {
                     updateChart(loc);
                 });
@@ -627,6 +650,7 @@
             }
 
             createCountryButtons();
+            
             updateChart('Japan');
             
             if (getPredictionButton) {

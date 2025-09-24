@@ -5,47 +5,110 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>AstroBloom Interactive</title>
     
+    <!-- Fonts and Libraries -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;700&display=swap" rel="stylesheet">
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIINfR7xP64jsImS44GdJqLsy7S+A8S53kU=" crossorigin=""/>
-    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-200l2hLgL2N4m9D5s0qf0B8Z5D3k2p2s=" crossorigin=""></script>
     <script src="https://unpkg.com/three"></script>
     <script src="https://unpkg.com/globe.gl"></script>
 
     <style>
         body { 
             margin: 0; 
-            background: black; 
+            background: #0d0d0d; 
             font-family: 'Syne', sans-serif; 
-            overflow: hidden;
             color: #e5e7eb;
         }
-        #globeViz { 
-            width: 100%; 
-            height: 100vh; 
+        
+        /* Container for the globe and chart */
+        .top-section {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 1rem;
+            width: 100%;
+            position: relative;
         }
-        #sliderContainer {
+
+        @media (min-width: 1024px) {
+            .top-section {
+                flex-direction: row;
+                justify-content: center;
+                align-items: flex-start;
+                padding: 2rem;
+            }
+        }
+        
+        #globeViz {
+            width: 100%;
+            height: 50vh;
+            max-width: 600px;
+            margin-bottom: 2rem;
+        }
+
+        @media (min-width: 1024px) {
+            #globeViz {
+                width: 50%;
+                height: 70vh;
+                margin-bottom: 0;
+            }
+        }
+
+        .chart-container {
+            width: 100%;
+            height: 50vh;
+            max-width: 600px;
+        }
+        
+        @media (min-width: 1024px) {
+            .chart-container {
+                width: 50%;
+                height: 70vh;
+                margin-left: 2rem;
+            }
+        }
+
+        /* Styling for the play button and slider */
+        #slider-controls {
             position: absolute;
             bottom: 20px;
-            width: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 80%;
             text-align: center;
             color: white;
             font-size: 1.2em;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 1rem;
         }
-        .globe-controls {
-            position: relative;
+        
+        #playBtn {
+            background-color: #e647b9ff; /* Pink color */
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 9999px;
+            font-weight: bold;
+            transition: all 0.2s ease-in-out;
+            cursor: pointer;
         }
+
+        #playBtn:hover {
+            transform: scale(1.05);
+            background-color: #ab8aecff;
+        }
+
         input[type="range"] { 
-            width: 80%; 
+            flex-grow: 1;
             -webkit-appearance: none;
-            background: #ad1c69;
+            background: #883492ff;
             height: 8px;
             border-radius: 5px;
             outline: none;
-            opacity: 0.7;
+            opacity: 0.9;
             transition: opacity .2s;
         }
         input[type="range"]:hover {
@@ -56,39 +119,31 @@
             appearance: none;
             width: 20px;
             height: 20px;
-            background: #ffffff;
-            border: 2px solid #ad1c69;
+            background: #ab8aecff;
+            border: 2px solid white;
             border-radius: 50%;
             cursor: pointer;
         }
         input[type="range"]::-moz-range-thumb {
             width: 20px;
             height: 20px;
-            background: #ffffff;
-            border: 2px solid #ad1c69;
+            background: #ab8aecff;
+            border: 2px solid white;
             border-radius: 50%;
             cursor: pointer;
         }
+
+        /* Card and container styling */
         .chart-card {
-            background-color: #0d0d0d;
+            background-color: #1f1f1f;
             border-radius: 1rem;
             padding: 1.5rem;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
         }
-        .chart-container {
-            position: relative;
-            height: 300px;
-            margin-top: 1.5rem;
-        }
-        #map {
-            height: 500px;
-            border-radius: 1rem;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-            transition: all 0.3s ease-in-out;
-        }
+        
         .loader {
             border: 4px solid #f3f3f3;
-            border-top: 4px solid #ad1c69;
+            border-top: 4px solid #ab8aecff;
             border-radius: 50%;
             width: 24px;
             height: 24px;
@@ -100,100 +155,81 @@
             100% { transform: rotate(360deg); }
         }
 
-        /* Mobile Layout */
-        @media (max-width: 1024px) {
-            .app-container {
-                flex-direction: column;
-                overflow-y: auto;
-            }
-            #globeViz {
-                height: 50vh;
-            }
-            .content-container {
-                overflow-y: visible;
-                padding-bottom: 2rem;
-            }
+        /* Main Content Section */
+        .main-content {
+            padding: 2rem;
+            max-width: 1200px;
+            margin: 0 auto;
         }
     </style>
 </head>
-<body class="bg-black text-white">
+<body class="bg-[#0d0d0d] text-white overflow-y-auto">
 
-    <div class="app-container flex flex-col lg:flex-row h-screen w-screen overflow-hidden">
-        
-        <!-- Interactive Globe Section -->
-        <div class="lg:w-1/2 globe-controls flex-shrink-0">
-            <div id="globeViz"></div>
-            <div id="sliderContainer">
-                <span id="monthLabel">January</span><br>
-                <input type="range" id="monthSlider" min="0" max="11" step="1" value="0"><br>
-                <button id="playBtn" class="mt-4 px-6 py-2 rounded-full border-2 border-transparent text-white font-bold bg-[#ad1c69] hover:bg-[#85154f] transition-colors duration-300">
-                    ▶ Play
-                </button>
-            </div>
-        </div>
+    <!-- Header -->
+    <header class="flex justify-between items-center py-4 px-8">
+        <h1 class="text-4xl font-bold text-white/90">AstroBloom</h1>
+        <nav>
+            <a href="#" class="text-white/70 hover:text-white mx-2 lg:mx-4">Home</a>
+            <a href="#" class="text-white/70 hover:text-white mx-2 lg:mx-4">Project</a>
+            <a href="#" class="text-white/70 hover:text-white mx-2 lg:mx-4">About</a>
+        </nav>
+    </header>
 
-        <!-- Data Visualization Section -->
-        <div class="lg:w-1/2 overflow-y-auto p-8 lg:p-12 space-y-8 content-container flex-grow">
-            <h1 class="text-4xl font-bold text-white/90 mb-4">AstroBloom: The Pulse of Life</h1>
-            <main class="grid grid-cols-1 gap-8">
-                <div class="p-6 bg-black rounded-2xl shadow-xl space-y-6">
-                    <h2 class="text-2xl font-bold text-white/90">Data Visualisation</h2>
-                    <div id="data-visualization-info" class="text-gray-400">
-                        <p>Click a marker on the map or a button below to see its NDVI trend and prediction.</p>
-                    </div>
-                    
-                    <div class="chart-card">
-                        <h3 class="text-lg font-semibold text-white/90 mb-2">NDVI Trend & Prediction</h3>
-                        <div id="chart-container-wrapper" class="chart-container flex justify-center items-center">
-                            <canvas id="ndviChart" class="hidden"></canvas>
-                            <div id="chart-status" class="text-gray-400">Loading chart...</div>
-                        </div>
-                    </div>
-
-                    <div id="ai-prediction-section" class="pt-6">
-                        <h3 class="text-2xl font-bold text-white/90 mb-2">AI Prediction</h3>
-                        <div id="ai-response-container" class="bg-black text-gray-300 p-4 rounded-lg shadow-inner min-h-[5rem]">
-                            AI responses will appear here. Click a data point on the chart and then click "Get AI Prediction" for more info.
-                        </div>
-                        <div id="selected-month-info" class="mt-4 hidden">
-                            <span class="text-white font-medium">Selected Month: </span><span id="selected-month-text" class="text-[#ad1c69]"></span>
-                            <button id="get-prediction-button" class="ml-4 bg-[#ad1c69] text-white py-1 px-3 rounded-full hover:bg-[#85154f]">Get AI Prediction</button>
-                        </div>
-                    </div>
-                    
-                    <div>
-                        <h3 class="text-xl font-semibold text-white/90 mb-4">Select a Country</h3>
-                        <div id="country-buttons-container" class="grid grid-cols-3 md:grid-cols-3 gap-3">
-                            </div>
-                    </div>
-                    
-                    <div class="pt-6">
-                        <h3 class="text-2xl font-bold text-white/90 mb-2">Upload Data</h3>
-                        <div class="flex flex-col space-y-2">
-                            <label for="hdf-file-input" class="block text-gray-400 font-medium">Upload a MODIS HDF file:</label>
-                            <input type="file" id="hdf-file-input" accept=".hdf" class="block w-full text-sm text-gray-500
-                                file:mr-4 file:py-2 file:px-4
-                                file:rounded-full file:border-0
-                                file:text-sm file:font-semibold
-                                file:bg-[#ad1c69] file:text-white
-                                hover:file:bg-[#85154f]
-                            ">
-                            <p id="upload-status-message" class="text-sm text-gray-500 mt-2"></p>
-                        </div>
-                    </div>
-                </div>
-
-                <div>
-                    <div id="map" class="w-full"></div>
-                </div>
-            </main>
+    <!-- Globe and Chart Section -->
+    <div class="top-section">
+        <div id="globeViz"></div>
+        <div class="chart-container flex items-center justify-center">
+            <div id="chart-status" class="text-gray-400">Loading chart...</div>
+            <canvas id="ndviChart" class="hidden"></canvas>
         </div>
     </div>
+    
+    <!-- Slider Controls -->
+    <div id="slider-controls">
+        <button id="playBtn" class="play-btn">▶ Play</button>
+        <span id="monthLabel" class="month-label">January</span>
+        <input type="range" id="monthSlider" min="0" max="11" value="0">
+    </div>
+
+    <!-- Main Content Section -->
+    <main class="main-content grid grid-cols-1 gap-8 mt-12">
+        <div class="p-6 bg-[#1f1f1f] rounded-2xl shadow-xl space-y-6">
+            <h2 class="text-2xl font-bold text-white/90">AI Prediction</h2>
+            <div id="ai-response-container" class="bg-black text-gray-300 p-4 rounded-lg shadow-inner min-h-[5rem]">
+                AI responses will appear here. Click a data point on the chart and then click "Get AI Prediction" for more info.
+            </div>
+            <div id="selected-month-info" class="mt-4 hidden">
+                <span class="text-white font-medium">Selected Month: </span><span id="selected-month-text" class="text-[#ab8aecff]"></span>
+                <button id="get-prediction-button" class="ml-4 bg-[#ab8aecff] text-white py-1 px-3 rounded-full hover:bg-[#e647b9ff]">Get AI Prediction</button>
+            </div>
+        </div>
+        
+        <div class="p-6 bg-[#1f1f1f] rounded-2xl shadow-xl space-y-6">
+            <h3 class="text-xl font-semibold text-white/90 mb-4">Select a Country</h3>
+            <div id="country-buttons-container" class="grid grid-cols-2 md:grid-cols-5 gap-3">
+            </div>
+        </div>
+        
+        <div class="p-6 bg-[#1f1f1f] rounded-2xl shadow-xl space-y-6">
+            <h3 class="text-2xl font-bold text-white/90 mb-2">Upload Data</h3>
+            <div class="flex flex-col space-y-2">
+                <label for="hdf-file-input" class="block text-gray-400 font-medium">Upload a MODIS HDF file:</label>
+                <input type="file" id="hdf-file-input" accept=".hdf" class="block w-full text-sm text-gray-500
+                    file:mr-4 file:py-2 file:px-4
+                    file:rounded-full file:border-0
+                    file:text-sm file:font-semibold
+                    file:bg-[#e647b9ff] file:text-white
+                    hover:file:bg-[#ab8aecff]
+                ">
+                <p id="upload-status-message" class="text-sm text-gray-500 mt-2"></p>
+            </div>
+        </div>
+    </main>
 
     <script>
         const monthNames = ["January","February","March","April","May","June","July","August","September","October","November","December"];
         const bloomData = [];
-
+        
         function addBloom(lat, lng, month, info, count = 10, spread = 3) {
             for (let i = 0; i < count; i++) {
                 bloomData.push({
@@ -269,6 +305,10 @@
 
         const slider = document.getElementById("monthSlider");
         const label = document.getElementById("monthLabel");
+        
+        slider.addEventListener("input", () => {
+            updateGlobe(parseInt(slider.value));
+        });
 
         function updateGlobe(monthIndex) {
             label.textContent = monthNames[monthIndex];
@@ -277,10 +317,6 @@
         }
 
         updateGlobe(0);
-
-        slider.addEventListener("input", e => {
-            updateGlobe(parseInt(e.target.value));
-        });
 
         (function animate() {
             GlobeObj.pointAltitude(d => 0.02 + 0.02 * Math.sin(Date.now() * 0.005 + d.lat));
@@ -435,9 +471,9 @@
                         {
                             label: 'Historical NDVI',
                             data: chartData.ndvi,
-                            borderColor: '#ad1c69',
-                            backgroundColor: 'rgba(173, 28, 105, 0.2)',
-                            pointBackgroundColor: '#ad1c69',
+                            borderColor: '#e647b9ff', /* Pink color for historical data */
+                            backgroundColor: 'rgba(230, 71, 185, 0.2)',
+                            pointBackgroundColor: '#e647b9ff',
                             borderWidth: 2,
                             pointRadius: 3,
                             fill: false,
@@ -446,9 +482,9 @@
                         {
                             label: 'Predicted NDVI',
                             data: allNDVI,
-                            borderColor: '#ff99c8',
-                            backgroundColor: 'rgba(255, 153, 200, 0.2)',
-                            pointBackgroundColor: '#ff99c8',
+                            borderColor: '#ab8aecff', /* Violet color for predicted data */
+                            backgroundColor: 'rgba(171, 142, 236, 0.2)',
+                            pointBackgroundColor: '#ab8aecff',
                             borderWidth: 2,
                             pointRadius: 3,
                             fill: false,
@@ -567,28 +603,6 @@
             }, 1500);
         }
 
-        function initMap() {
-            if (typeof L === 'undefined') {
-                console.error("Leaflet.js not loaded. Map cannot be initialized.");
-                return;
-            }
-            const map = L.map('map').setView([20, 0], 2);
-            L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
-                attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
-                subdomains: 'abcd',
-                maxZoom: 19
-            }).addTo(map);
-
-            for (const loc in locations) {
-                const coords = locations[loc];
-                const marker = L.marker([coords.lat, coords.lon]).addTo(map);
-                marker.bindPopup(loc);
-                marker.on('click', () => {
-                    updateChart(loc);
-                });
-            }
-        }
-        
         function createCountryButtons() {
             const buttonContainer = document.getElementById('country-buttons-container');
             const locationsArray = Object.keys(locations);
@@ -596,7 +610,7 @@
             locationsArray.forEach(loc => {
                 const button = document.createElement('button');
                 button.textContent = loc;
-                button.className = 'bg-[#ad1c69] text-white py-2 px-4 rounded-full transition-colors duration-200 hover:bg-[#85154f] focus:outline-none focus:ring-2 focus:ring-[#ad1c69] focus:ring-opacity-50';
+                button.className = 'bg-[#475569] text-white py-2 px-4 rounded-full transition-colors duration-200 hover:bg-[#64748b] focus:outline-none focus:ring-2 focus:ring-[#e647b9ff] focus:ring-opacity-50';
                 button.addEventListener('click', () => {
                     updateChart(loc);
                 });
@@ -625,7 +639,6 @@
                 console.error("Initialization error:", error);
             }
 
-            initMap();
             createCountryButtons();
             updateChart('Japan');
             

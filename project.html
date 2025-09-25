@@ -8,11 +8,8 @@
   <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;700&display=swap" rel="stylesheet">
   <!-- Tailwind CSS for utility classes -->
   <script src="https://cdn.tailwindcss.com"></script>
-  <!-- Chart.js -->
+  <!-- Chart.js (placed in head but DOM runs at end) -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
-  <!-- Globe.gl and dependencies -->
-  <script src="https://unpkg.com/three"></script>
-  <script src="https://unpkg.com/globe.gl"></script>
   <style>
     html, body {
       height: 100%;
@@ -20,10 +17,15 @@
       font-family: 'Syne', sans-serif;
       background: #09010C;
       color: #ffd1e6;
+      min-height: 100vh;
+      width: 100vw;
+      overflow-x: hidden;
     }
     #main-grid {
       display: flex;
       min-height: 100vh;
+      width: 100vw;
+      background: #09010C;
     }
     /* Globe styling */
     #globeColumn {
@@ -38,10 +40,11 @@
       position: relative;
     }
     #globeViz {
-      width: 100%;
-      max-width: 640px;
+      width: 96vw;
+      max-width: 600px;
       max-height: 95vh;
-      min-height: 400px;
+      min-height: 420px;
+      min-width: 375px;
       background: transparent;
       aspect-ratio: 1 / 1;
     }
@@ -72,6 +75,7 @@
       display: flex;
       flex-direction: column;
       gap: 2.5rem;
+      min-width: 340px;
     }
     .chart-card {
       background: rgba(27,5,27,0.63);
@@ -80,6 +84,7 @@
       box-shadow: 0 4px 24px -6px #db288e44;
       border: 1.5px solid #db288e60;
       margin-bottom: 2rem;
+      min-width: 300px;
     }
     .chart-title {
       color: #ffd1e6;
@@ -94,6 +99,8 @@
     /* Chart.js tweaks for transparency */
     canvas {
       background: transparent !important;
+      min-height: 250px;
+      min-width: 270px;
     }
     /* Interactive location buttons */
     .country-btn {
@@ -114,10 +121,10 @@
       border-color: #ffd1e680;
       box-shadow: 0 0 0 2px #ffd1e680;
     }
-    /* Adjust scroll for mobile */
     @media (max-width: 900px) {
       #main-grid {
         flex-direction: column;
+        width:100vw;
       }
       #globeColumn, #chartsColumn {
         min-width: unset;
@@ -166,9 +173,15 @@
   </div>
 
 </div>
+
+<!-- Globe.gl and Three.js: AT THE BOTTOM -->
+<script src="https://unpkg.com/three@0.152.2/build/three.min.js"></script>
+<script src="https://unpkg.com/globe.gl"></script>
 <script>
+// Everything inside DOMContentLoaded so all elements exist!
+document.addEventListener('DOMContentLoaded', function(){
+
 /* -------------------- DATA -------------------- */
-// Locations
 const locations = {
   "Japan": { lat: 36.2, lng: 138.2 },
   "Alaska": { lat: 64.2, lng: -149.5 },
@@ -176,7 +189,6 @@ const locations = {
   "New Zealand": { lat: -40.9, lng: 174.9 },
   "Fiji": { lat: -17.7, lng: 178.1 }
 };
-// Bloom data for globe
 const monthNames = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
 const bloomData = [];
 function addBloom(lat, lng, month, info, count=12, spread=3) {
@@ -189,73 +201,59 @@ function addBloom(lat, lng, month, info, count=12, spread=3) {
     });
   }
 }
-// Japan: Cherry Blossoms
 ["#db288e","#f5a2ac","#f484d4","#e647b9","#db288e","#ffe9fa","#de4242","#c27d37","#e16473","#f1ebb2","#f3b0e6","#db288e"].forEach((color, i)=>{
   addBloom(36.2,138.2,i,{
     color,
     label:"Japan",
     species:"Cherry Blossom (Sakura)",
-    note:"Peak in spring, vital for local pollinators.<br>Symbol of renewal."
+    note:"Peak in spring, vital for pollinators."
   },15,5);
 });
-// Alaska: Wildflowers
 ["#d964f1","#a2cff1","#a2f1e7","#d25db9","#cad239","#d9eaa5","#94dee1","#5cabcaff","#34879eff","#4b6cb1ff","#db288e","#db54c3"].forEach((color,i)=>{
   addBloom(64.2,-149.5,i,{
     color,
     label:"Alaska",
     species:"Arctic Lupine, Poppies",
-    note:"Short growing season; supports native insects."
+    note:"Short growing season; supports insects."
   },13,7);
 });
-// Madagascar: Baobab + tropical
 ['#db288e','#e1a2d6','#98d6e7','#b288d1','#ffe9fa','#8be0dd','#e2b330','#b2d7e8','#ffa640','#e99aeb','#ea8ecb','#db92b1'].forEach((color,i)=>{
   addBloom(-18.9,47.5,i,{
     color,
     label:"Madagascar",
     species:"Baobab & Traveler's Palm",
-    note:"Unique blooms, crucial for lemur pollinators."
+    note:"Bloom vital for lemur pollinators."
   },15,6);
 });
-// New Zealand
 ["#ff1493","#cb84c9","#ffb6c1","#ff8c00","#b22222","#e3e54e","#778899","#ffff00","#db288e","#b52212","#db54c3","#c055f2"].forEach((color,i)=>{
   addBloom(-40.9,174.9,i,{
     color,
     label:"New Zealand",
     species:"Kōwhai & Pohutukawa",
-    note:"Supports tui & bellbird birds through seasonal blooms."
+    note:"Supports tui & bellbird through blooms."
   },15,5);
 });
-// Fiji
 ["#ebe41f","#efa3ee","#ef6cae","#edb232","#da48c2","#ea9cd4","#ffffff","#ff4500","#edaa92","#eea58b","#e69a87","#db288e"].forEach((color,i)=>{
   addBloom(-17.7,178.1,i,{
     color,
     label:"Fiji",
     species:"Hibiscus, Breadfruit",
-    note:"Blooms align with rain; supports birds, insects."
+    note:"Tied to rain; supports birds/insects."
   },14,5);
 });
-// Pollinator data for Globe
 const pollinators = [
-  // Japan
   {lat:36.2, lng:138.5, icon:"🦋", label:"Butterfly", region:"Japan", month:[3,4,5]},
   {lat:36.5, lng:138.7, icon:"🐝", label:"Honeybee", region:"Japan", month:[3,4,5,6]},
-  // Alaska
-  {lat:64.3, lng:-149.3, icon:"🦟", label:"Mosquito (pollinator)", region:"Alaska", month:[6,7]},
+  {lat:64.3, lng:-149.3, icon:"🦟", label:"Mosquito (pollinates)", region:"Alaska", month:[6,7]},
   {lat:64.5, lng:-149.8, icon:"🦋", label:"Arctic Butterfly", region:"Alaska", month:[6,7,8]},
-  // Madagascar
   {lat:-18.6, lng: 47.3, icon:"🦇", label:"Fruit Bat", region:"Madagascar", month:[11,0,1,2]},
   {lat:-18.3, lng:47.1, icon:"🐦", label:"Sunbird", region:"Madagascar", month:[9,10,11,0,1]},
-  // New Zealand
   {lat:-41.2, lng:175.1, icon:"🐦", label:"Bellbird", region:"New Zealand", month:[9,10,11,0]},
   {lat:-41.4, lng:174.7, icon:"🐝", label:"Native bee", region:"New Zealand", month:[9,10]},
-  // Fiji
   {lat:-17.9, lng:177.7, icon:"🦋", label:"Butterfly", region:"Fiji", month:[0,1,2,11]},
   {lat:-17.4, lng:178.4, icon:"🐦", label:"Fruit Dove", region:"Fiji", month:[1,2,3,10,11]},
 ];
-
-/* -------- NDVI DATA GENERATION FOR CHARTS -------- */
 function generateNDVIData(location, startDate, numMonths) {
-  // base/seasonal factors define seasonal NDVI curves by region
   let base, factor;
   switch(location) {
     case "Japan": base = 0.45; factor = 0.25; break;
@@ -270,7 +268,7 @@ function generateNDVIData(location, startDate, numMonths) {
   for(let i=0; i<numMonths; ++i) {
     let date = new Date(start.getFullYear(), start.getMonth()+i,1);
     let m = date.getMonth();
-    if(location==="New Zealand") m = (m+6)%12; // southern hemisphere seasonal shift
+    if(location==="New Zealand") m = (m+6)%12;
     const value = base + factor * Math.sin(m*(Math.PI/6)) + 0.04*Math.sin(i/3) + 0.03*(Math.random()-0.5);
     dates.push(date);
     ndvi.push(Math.max(0, Math.min(1, value)));
@@ -281,7 +279,6 @@ const ndviDataAll = {};
 for(let loc in locations) {
   ndviDataAll[loc] = generateNDVIData(loc, '2019-01-01', 60);
 }
-/* --------------- PAGE INTERACTION STATE: Vars -------------- */
 let currentLocation = "Japan";
 let currentMonth = (new Date()).getMonth();
 let globeInstance = null;
@@ -294,14 +291,14 @@ function initializeGlobe() {
     globeInstance = null;
   }
   globeInstance = Globe()
-    .globeImageUrl('//unpkg.com/three-globe/example/img/earth-night.jpg')
+    .globeImageUrl('https://unpkg.com/three-globe/example/img/earth-night.jpg')
     .backgroundColor('rgba(0,0,0,0)')
     .pointLat('lat')
     .pointLng('lng')
     .pointAltitude(() => 0.05)
     .pointRadius(0.48)
     .pointColor(d => d.color)
-    .pointLabel(d => 
+    .pointLabel(d =>
       `<div style='min-width:108px;'>
         <span style='font-weight:700;color:#db288e;'>${d.label}</span><br/>
         <span style='font-size:1em;'>${d.species}</span>
@@ -311,24 +308,20 @@ function initializeGlobe() {
     .height(document.getElementById('globeViz').clientHeight)
     (document.getElementById('globeViz'));
 
-  // pollinators: Three.js Sprite layer
   addPollinatorSprites(currentMonth);
 
-  // set default points (NDVI layer) to bloomData for this month
   updateGlobePointsForMonth(currentMonth);
   globeInstance.controls().autoRotate = true;
   globeInstance.controls().autoRotateSpeed = 0.22;
 }
 function updateGlobePointsForMonth(monthIdx) {
-  // Filter by month only if NDVI layer is enabled
   if(document.getElementById('ndvi-layer').checked) {
     globeInstance.pointsData(bloomData.filter(d=>d.month===monthIdx));
   } else {
-    globeInstance.pointsData([]); // clear if disabled
+    globeInstance.pointsData([]);
   }
 }
 function addPollinatorSprites(monthIdx) {
-  // Clean up old sprites if needed
   if(globeInstance && globeInstance.scene()) {
     for (let i = globeInstance.scene().children.length - 1; i >= 0; i--) {
       const obj = globeInstance.scene().children[i];
@@ -337,18 +330,16 @@ function addPollinatorSprites(monthIdx) {
       }
     }
   }
-  // Draw each pollinator as a sprite (emoji)
   if(!document.getElementById('pollinators-layer').checked) return;
   pollinators.forEach(pol => {
     if(typeof monthIdx==="number" && !pol.month.includes(monthIdx)) return;
-    const spriteMaterial = new THREE.SpriteMaterial({ 
-      map: createTextTexture(pol.icon), 
-      transparent: true 
+    const spriteMaterial = new THREE.SpriteMaterial({
+      map: createTextTexture(pol.icon),
+      transparent: true
     });
     const sprite = new THREE.Sprite(spriteMaterial);
     sprite.scale.set(2,2,2);
     sprite.name = "pollinatorSprite";
-    // position in lat/lon
     const {lat, lng} = pol;
     const r = 100;
     const phi = (90 - lat) * Math.PI/180;
@@ -358,7 +349,6 @@ function addPollinatorSprites(monthIdx) {
       r * Math.cos(phi),
       r * Math.sin(phi) * Math.sin(theta)
     );
-    // store label as userData for tooltips
     sprite.userData = { tooltip: `<span style='color:#ffcae8;font-weight:bold;'>${pol.label}</span><br><span style='color:#db288e;font-weight:bold;'>${pol.region}</span>` };
     globeInstance.scene().add(sprite);
   });
@@ -375,16 +365,12 @@ function createTextTexture(text) {
   texture.needsUpdate = true;
   return texture;
 }
-// Respond to toggles
-document.addEventListener("DOMContentLoaded",()=>{
-  document.getElementById('ndvi-layer').addEventListener('change', ()=>{
-    updateGlobePointsForMonth(currentMonth);
-  });
-  document.getElementById('pollinators-layer').addEventListener('change', ()=>{
-    addPollinatorSprites(currentMonth);
-  });
+document.getElementById('ndvi-layer').addEventListener('change', ()=>{
+  updateGlobePointsForMonth(currentMonth);
 });
-/* --------------- UPDATE GLOBE WHEN MONTH CHANGES (from chart click) ----------------- */
+document.getElementById('pollinators-layer').addEventListener('change', ()=>{
+  addPollinatorSprites(currentMonth);
+});
 function highlightMonthOnGlobe(monthIdx) {
   currentMonth = monthIdx;
   updateGlobePointsForMonth(monthIdx);
@@ -406,7 +392,6 @@ function createCountryButtons() {
   }
 }
 function setActiveCountry(loc) {
-  // Remove old active
   for(let l in locations)
     document.getElementById(`btn_${l.replace(/[^a-z]/gi,'')}`)?.classList.remove('active');
   document.getElementById(`btn_${loc.replace(/[^a-z]/gi,'')}`)?.classList.add('active');
@@ -415,18 +400,14 @@ function setActiveCountry(loc) {
   updateDataPanel(loc, currentMonth);
 }
 
-/* ------- CHARTS: NDVI (main), and interactivity  ------------- */
 function updateChartForLocation(loc) {
   const {dates, ndvi} = ndviDataAll[loc];
-  // Monthly averages for all history, for seasonal trend
   const monthlyAverages = Array(12).fill(0), monthlyCount = Array(12).fill(0);
   ndvi.forEach((val,i)=>{
     const m = dates[i].getMonth();
     monthlyAverages[m] += val; monthlyCount[m]++;
   });
   for(let i=0;i<12;++i) if(monthlyCount[i]) monthlyAverages[i]/=monthlyCount[i];
-
-  // Trend for next year prediction
   const xMonths = Array.from({length: ndvi.length},(_,i)=>i);
   let sumX=0,sumY=0,sumXY=0,sumX2=0,n=xMonths.length;
   for(let i=0;i<n;i++){
@@ -434,19 +415,15 @@ function updateChartForLocation(loc) {
     sumXY+=xMonths[i]*ndvi[i]; sumX2+=xMonths[i]*xMonths[i];
   }
   const m = (n*sumXY-sumX*sumY)/(n*sumX2-sumX*sumX);
-  // Predict 12 months
   let predictedNDVI = [];
   for(let i=1;i<=12;i++){
     const idx = (dates[n-1].getMonth()+i)%12;
     const pred = monthlyAverages[idx] + m*(n + i - 1);
     predictedNDVI.push(Math.max(0, Math.min(1,pred)));
   }
-  // chart labels for all
   const allDates = dates.concat(Array.from({length:12},(_,i)=>new Date(dates[n-1].getFullYear(),dates[n-1].getMonth()+i+1,1)));
   const allLabels = allDates.map(d=>`${monthNames[d.getMonth()]} '${d.getFullYear().toString().slice(-2)}`);
   const allNDVI   = ndvi.concat(predictedNDVI);
-
-  // Chart.js setup
   const ctx = document.getElementById('ndviChart').getContext('2d');
   if(myChart) myChart.destroy();
   myChart = new Chart(ctx, {
@@ -488,8 +465,8 @@ function updateChartForLocation(loc) {
       maintainAspectRatio: false,
       interaction: { mode:'nearest', intersect:true },
       scales: {
-        x: { 
-          title: { display: true, text:'Month', color:'#ffd1e6' }, 
+        x: {
+          title: { display: true, text:'Month', color:'#ffd1e6' },
           ticks: { color:'#db288e', maxTicksLimit:15 },
           grid: { color:'rgba(219,40,142,0.13)' }
         },
@@ -512,26 +489,20 @@ function updateChartForLocation(loc) {
         const points = myChart.getElementsAtEventForMode(e, 'nearest', { intersect: true }, true);
         if(points.length) {
           const idx = points[0].index;
-          highlightMonthOnGlobe(idx%12); // update month for globe
+          highlightMonthOnGlobe(idx%12);
           updateDataPanel(currentLocation, idx%12);
         }
       }
     }
   });
-  // Default: highlight current month on globe
   highlightMonthOnGlobe((new Date()).getMonth());
   updateDataPanel(currentLocation, (new Date()).getMonth());
 }
-
-/* ------------ DATA PANEL INFO BLURB (per chart+globe month click) -------------- */
 function updateDataPanel(location, monthIdx) {
-  // NDVI: get chart/prediction
   const {dates, ndvi} = ndviDataAll[location];
   const curNDVI = ndvi.filter((v,i)=>dates[i].getMonth()===monthIdx);
   const avg = curNDVI.length ? (curNDVI.reduce((a,b)=>a+b,0)/curNDVI.length).toFixed(2) : 'N/A';
-  // Bloom: get regional blooms from globe
   const blooms = bloomData.filter(b=>b.label===location&&b.month===monthIdx);
-  // Pollinators: get present
   const polli = pollinators.filter(pol=>pol.region===location&&pol.month.includes(monthIdx));
   document.getElementById("dataPanel").innerHTML = `
     <div style="margin-bottom:1em;">
@@ -552,19 +523,16 @@ function updateDataPanel(location, monthIdx) {
     </div>
   `;
 }
-/* -- PAGE INITIALIZE -- */
-window.onload = ()=>{
-  createCountryButtons();
-  setActiveCountry(currentLocation);
-  initializeGlobe();
+createCountryButtons();
+setActiveCountry(currentLocation);
+initializeGlobe();
+let resizeTimeout=null;
+window.addEventListener('resize',()=>{
+  clearTimeout(resizeTimeout);
+  resizeTimeout = setTimeout(()=>{ initializeGlobe(); },250);
+});
 
-  // Responsive: re-render globe on window resize
-  let resizeTimeout=null;
-  window.addEventListener('resize',()=>{
-    clearTimeout(resizeTimeout);
-    resizeTimeout = setTimeout(()=>{ initializeGlobe(); },250);
-  });
-};
+});
 </script>
 </body>
 </html>

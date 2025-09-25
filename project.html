@@ -9,14 +9,12 @@
 <link href="https://fonts.googleapis.com/css2?family=Syne&display=swap" rel="stylesheet" />
 
 <style>
-  /* Reset and base */
   body, html {
     margin: 0; padding: 0; height: 100vh; overflow: hidden;
-    background: #000000;
-    color: #ff1493; /* dark pink */
+    background: #000;
+    color: #ff1493;
     font-family: 'Syne', sans-serif;
     display: flex;
-    flex-direction: row;
   }
   #globeViz {
     flex: 1;
@@ -25,24 +23,20 @@
   #chartContainer {
     flex: 1;
     padding: 20px;
-    background: rgba(255, 20, 147, 0.1); /* transparent dark pink */
+    background: rgba(255, 20, 147, 0.1);
     display: flex;
     flex-direction: column;
     justify-content: center;
   }
-  canvas {
-    background: transparent !important;
-  }
   h2 {
     margin: 0 0 10px 0;
-    color: #ff69b4; /* lighter pink */
+    color: #ff69b4;
   }
   #countryName {
     font-weight: 700;
     font-size: 1.5em;
     margin-bottom: 15px;
   }
-  /* Tooltip style for globe */
   #tooltip {
     position: absolute;
     background: rgba(255, 20, 147, 0.85);
@@ -54,6 +48,11 @@
     font-weight: 600;
     opacity: 0;
     transition: opacity 0.2s ease;
+    z-index: 10;
+  }
+  canvas {
+    background: transparent !important;
+    display: block;
   }
 </style>
 
@@ -72,19 +71,15 @@
 <!-- Three.js + Globe.gl -->
 <script src="https://unpkg.com/three@0.148.0/build/three.min.js"></script>
 <script src="https://unpkg.com/three-globe@2.25.2/dist/three-globe.min.js"></script>
-<script src="https://unpkg.com/d3@7"></script>
+
+<!-- Topojson -->
+<script src="https://cdn.jsdelivr.net/npm/topojson@3"></script>
 
 <!-- Chart.js -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
 <script>
-  // ==== Your NDVI data and predictions converted from Python ====
-
-  // Data format example: 
-  // For each country, an array of objects {date: "YYYY-MM-DD", ndvi: value}
-  // Past data + predicted data concatenated
-
-  // Example locations with lat/lon and data:
+  // --- Locations and NDVI data (sample) ---
   const locations = {
     "Japan": { lat: 36.2048, lon: 138.2529 },
     "Alaska": { lat: 64.2008, lon: -149.4937 },
@@ -93,8 +88,19 @@
     "Fiji": { lat: -17.7134, lon: 178.0650 }
   };
 
-  // Simulated combined historical + predicted NDVI data for each location
-  // NOTE: Replace this with your real data converted to JSON from Python
+  // Generate synthetic NDVI data with predictions for demo
+  function generateSampleNDVI(pastMonths = 60, futureMonths = 12, base = 0.5, amplitude = 0.3) {
+    const data = [];
+    const startDate = new Date(2018, 0, 1);
+    for (let i = 0; i < pastMonths + futureMonths; i++) {
+      const date = new Date(startDate.getFullYear(), startDate.getMonth() + i, 1);
+      let val = base + amplitude * Math.sin((2 * Math.PI * i) / 12) + 0.05 * (Math.random() - 0.5);
+      val = Math.min(Math.max(val, 0), 1);
+      data.push({ date: date.toISOString().substring(0, 10), ndvi: val });
+    }
+    return data;
+  }
+
   const ndviData = {
     "Japan": generateSampleNDVI(60, 12, 0.6, 0.3),
     "Alaska": generateSampleNDVI(60, 12, 0.5, 0.2),
@@ -103,133 +109,103 @@
     "Fiji": generateSampleNDVI(60, 12, 0.6, 0.35)
   };
 
-  // Helper function to generate synthetic NDVI data for demo (past + future)
-  function generateSampleNDVI(pastMonths=60, futureMonths=12, base=0.5, amplitude=0.3){
-    let data = [];
-    let startDate = new Date(2018, 0, 1); // Jan 2018
-    for(let i=0; i < pastMonths + futureMonths; i++){
-      let date = new Date(startDate.getFullYear(), startDate.getMonth() + i, 1);
-      let val = base + amplitude * Math.sin((2 * Math.PI * i) / 12) + 0.05 * (Math.random() - 0.5);
-      val = Math.min(Math.max(val, 0), 1);
-      data.push({date: date.toISOString().substring(0,10), ndvi: val});
-    }
-    return data;
-  }
+  // --- Setup Globe ---
 
-  // === Globe Setup ===
+  // Create globe
+  const Globe = new ThreeGlobe()
+    .globeImageUrl('//unpkg.com/three-globe/example/img/earth-night.jpg')
+    .showAtmosphere(false)
+    .polygonsCapColor(() => 'rgba(255,20,147,0.4)')
+    .polygonsSideColor(() => 'rgba(255,20,147,0.1)')
+    .polygonsStrokeColor(() => '#ff1493')
+    .polygonAltitude(0.06);
 
-  const Globe = new ThreeGlobe({
-    waitForGlobeReady: true,
-    showAtmosphere: false,
-    backgroundColor: null,
-    globeGlowCoefficient: 0.2,
-  })
-  .globeImageUrl('//unpkg.com/three-globe/example/img/earth-dark.jpg') // dark textured globe
-  .polygonsData([]) // we'll add countries later
-  .polygonCapColor(() => 'rgba(255,20,147,0.4)')
-  .polygonSideColor(() => 'rgba(255,20,147,0.05)')
-  .polygonStrokeColor(() => '#ff1493')
-  .polygonAltitude(0.06);
-
-  const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
-  renderer.setSize(window.innerWidth * 0.5, window.innerHeight);
-  renderer.setClearColor(0x000000, 0); // transparent background
-
+  // Setup scene, camera, renderer
   const scene = new THREE.Scene();
   const camera = new THREE.PerspectiveCamera();
   camera.aspect = window.innerWidth / window.innerHeight;
   camera.updateProjectionMatrix();
-  camera.position.z = 400;
+  camera.position.z = 300;
 
+  const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+  renderer.setSize(window.innerWidth / 2, window.innerHeight);
+  renderer.setClearColor(0x000000, 0); // transparent background
+
+  document.getElementById('globeViz').appendChild(renderer.domElement);
   scene.add(Globe);
-  scene.add(new THREE.AmbientLight(0xffffff));
+  scene.add(new THREE.AmbientLight(0xffffff, 0.9));
+  scene.add(new THREE.DirectionalLight(0xffffff, 0.4));
 
-  const globeDiv = document.getElementById('globeViz');
-  globeDiv.appendChild(renderer.domElement);
-
-  // Load GeoJSON for countries - Using naturalearth data (simplified)
+  // Load and add countries polygons
   fetch('https://cdn.jsdelivr.net/npm/world-atlas@2/countries-110m.json')
     .then(res => res.json())
-    .then(data => {
-      // Convert topojson to geojson
-      const countries = topojson.feature(data, data.objects.countries).features;
+    .then(worldData => {
+      const countries = topojson.feature(worldData, worldData.objects.countries).features;
       Globe.polygonsData(countries);
-      Globe.polygonLabel(({ properties: d }) => d.ADMIN);
-      Globe.polygonsTransitionDuration(300);
-
-      renderer.render(scene, camera);
     });
 
-  // Resize handling
+  // Handle resizing
   window.addEventListener('resize', () => {
-    renderer.setSize(window.innerWidth * 0.5, window.innerHeight);
-    camera.aspect = (window.innerWidth * 0.5) / window.innerHeight;
+    renderer.setSize(window.innerWidth / 2, window.innerHeight);
+    camera.aspect = (window.innerWidth / 2) / window.innerHeight;
     camera.updateProjectionMatrix();
   });
 
   // Animate globe rotation
-  let rotationSpeed = 0.0015;
-  function animate(){
-    Globe.rotation.y += rotationSpeed;
+  function animate() {
+    Globe.rotation.y += 0.0012;
     renderer.render(scene, camera);
     requestAnimationFrame(animate);
   }
   animate();
 
-  // === Interaction and Tooltip ===
-
+  // --- Tooltip setup ---
   const tooltip = document.getElementById('tooltip');
 
-  // Raycaster for hover & clicks
   const raycaster = new THREE.Raycaster();
   const mouse = new THREE.Vector2();
 
-  renderer.domElement.addEventListener('mousemove', event => {
+  renderer.domElement.addEventListener('mousemove', e => {
     const rect = renderer.domElement.getBoundingClientRect();
-    mouse.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
-    mouse.y = - ((event.clientY - rect.top) / rect.height) * 2 + 1;
+    mouse.x = ((e.clientX - rect.left) / rect.width) * 2 - 1;
+    mouse.y = - ((e.clientY - rect.top) / rect.height) * 2 + 1;
 
     raycaster.setFromCamera(mouse, camera);
     const intersects = raycaster.intersectObjects(Globe.polygonsMeshes);
 
-    if(intersects.length > 0){
-      const country = intersects[0].object;
-      const props = country?.userData?.feature?.properties;
-      if(props){
-        tooltip.style.opacity = 1;
-        tooltip.style.left = event.clientX + 10 + 'px';
-        tooltip.style.top = event.clientY + 10 + 'px';
-        tooltip.textContent = props.ADMIN;
-      }
+    if (intersects.length > 0) {
+      const props = intersects[0].object.userData.feature.properties;
+      tooltip.style.opacity = 1;
+      tooltip.style.left = e.clientX + 10 + 'px';
+      tooltip.style.top = e.clientY + 10 + 'px';
+      tooltip.textContent = props.ADMIN;
     } else {
       tooltip.style.opacity = 0;
     }
   });
 
-  // === Chart Setup ===
-
+  // --- Chart setup ---
   const ctx = document.getElementById('ndviChart').getContext('2d');
+  const countryNameEl = document.getElementById('countryName');
 
   const ndviChart = new Chart(ctx, {
     type: 'line',
     data: {
       labels: [],
-      datasets: [
-        {
-          label: 'NDVI',
-          data: [],
-          borderColor: '#ff1493',
-          backgroundColor: 'rgba(255,20,147,0.3)',
-          pointRadius: 3,
-          fill: true,
-          tension: 0.3
-        }
-      ]
+      datasets: [{
+        label: 'NDVI',
+        data: [],
+        borderColor: '#ff1493',
+        backgroundColor: 'rgba(255,20,147,0.3)',
+        pointRadius: 3,
+        fill: true,
+        tension: 0.3
+      }]
     },
     options: {
       responsive: true,
       maintainAspectRatio: false,
-      animation: {duration: 500},
+      animation: { duration: 500 },
       scales: {
         x: {
           type: 'time',
@@ -251,54 +227,7 @@
     }
   });
 
-  // === Select Country Functionality ===
-
-  const countryNameEl = document.getElementById('countryName');
-
-  function flyToLocation(lat, lon){
-    // Animate globe rotation to focus on lat/lon
-    const phi = (90 - lat) * (Math.PI / 180);
-    const theta = (lon + 180) * (Math.PI / 180);
-
-    // Animate rotation.y to theta, rotation.x to phi (approx)
-    // We'll just set rotation.y = theta - Math.PI (simple approx)
-    const targetY = theta - Math.PI;
-    const targetX = phi - Math.PI / 2;
-
-    let frame = 0;
-    const frames = 60;
-    const startY = Globe.rotation.y;
-    const startX = Globe.rotation.x;
-    function animateRotation(){
-      frame++;
-      Globe.rotation.y = startY + (targetY - startY) * frame/frames;
-      Globe.rotation.x = startX + (targetX - startX) * frame/frames;
-      if(frame < frames){
-        requestAnimationFrame(animateRotation);
-      }
-    }
-    animateRotation();
-  }
-
-  function updateChart(country){
-    const data = ndviData[country];
-    if(!data) {
-      countryNameEl.textContent = `No NDVI data for ${country}`;
-      ndviChart.data.labels = [];
-      ndviChart.data.datasets[0].data = [];
-      ndviChart.update();
-      return;
-    }
-
-    countryNameEl.textContent = country;
-
-    ndviChart.data.labels = data.map(d => d.date);
-    ndviChart.data.datasets[0].data = data.map(d => ({x: d.date, y: d.ndvi}));
-    ndviChart.update();
-  }
-
-  // Map country names from globe to our dataset keys (simplified)
-  // You can extend this mapping if you add more countries
+  // --- Country mapping for NDVI locations ---
   const countryMapping = {
     "Japan": "Japan",
     "United States of America": "Alaska",
@@ -307,38 +236,73 @@
     "Fiji": "Fiji"
   };
 
-  // Handle clicks on countries
-  Globe.polygonsMeshes.forEach(mesh => {
-    mesh.cursor = 'pointer';
-  });
+  // --- Functions ---
 
-  renderer.domElement.addEventListener('click', event => {
+  // Smoothly fly globe to location
+  function flyToLocation(lat, lon) {
+    const phi = (90 - lat) * (Math.PI / 180);
+    const theta = (lon + 180) * (Math.PI / 180);
+
+    const targetY = theta - Math.PI;
+    const targetX = phi - Math.PI / 2;
+
+    let frame = 0;
+    const totalFrames = 120;
+
+    const startX = Globe.rotation.x;
+    const startY = Globe.rotation.y;
+
+    function animateFly() {
+      frame++;
+      const lerpX = startX + (targetX - startX) * (frame / totalFrames);
+      const lerpY = startY + (targetY - startY) * (frame / totalFrames);
+      Globe.rotation.x = lerpX;
+      Globe.rotation.y = lerpY;
+      if (frame < totalFrames) {
+        requestAnimationFrame(animateFly);
+      }
+    }
+    animateFly();
+  }
+
+  // Update chart with NDVI data for given location name
+  function updateChart(locationName) {
+    const data = ndviData[locationName];
+    if (!data) return;
+
+    countryNameEl.textContent = locationName;
+
+    ndviChart.data.labels = data.map(d => new Date(d.date));
+    ndviChart.data.datasets[0].data = data.map(d => d.ndvi);
+
+    ndviChart.update();
+  }
+
+  // --- Globe click interaction ---
+  renderer.domElement.addEventListener('click', e => {
     const rect = renderer.domElement.getBoundingClientRect();
-    mouse.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
-    mouse.y = - ((event.clientY - rect.top) / rect.height) * 2 + 1;
+    mouse.x = ((e.clientX - rect.left) / rect.width) * 2 - 1;
+    mouse.y = - ((e.clientY - rect.top) / rect.height) * 2 + 1;
 
     raycaster.setFromCamera(mouse, camera);
     const intersects = raycaster.intersectObjects(Globe.polygonsMeshes);
 
-    if(intersects.length > 0){
-      const props = intersects[0].object.userData.feature.properties;
-      const countryName = props.ADMIN;
+    if (intersects.length > 0) {
+      const countryProps = intersects[0].object.userData.feature.properties;
+      const countryName = countryProps.ADMIN;
 
-      const mappedCountry = countryMapping[countryName];
-      if(mappedCountry){
-        const loc = locations[mappedCountry];
-        flyToLocation(loc.lat, loc.lon);
-        updateChart(mappedCountry);
+      if (countryMapping[countryName]) {
+        const locName = countryMapping[countryName];
+        const { lat, lon } = locations[locName];
+        flyToLocation(lat, lon);
+        updateChart(locName);
       } else {
-        countryNameEl.textContent = `No data for ${countryName}`;
+        countryNameEl.textContent = `No NDVI data for ${countryName}`;
       }
     }
   });
 
 </script>
-
-<!-- Topojson for converting countries -->
-<script src="https://cdn.jsdelivr.net/npm/topojson@3"></script>
 
 </body>
 </html>

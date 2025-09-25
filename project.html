@@ -1,145 +1,38 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <title>AstroBloom Globe + NDVI Analytics</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8"/>
+  <title>NASA Global NDVI Project</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <!-- Syne font -->
   <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;700&display=swap" rel="stylesheet">
-  <!-- Tailwind CSS for utility classes -->
+  <!-- Tailwind CSS utility (safe for CDN use) -->
   <script src="https://cdn.tailwindcss.com"></script>
-  <!-- Chart.js (placed in head but DOM runs at end) -->
+  <!-- Chart.js -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
   <style>
-    html, body {
-      height: 100%;
-      margin: 0;
-      font-family: 'Syne', sans-serif;
-      background: #09010C;
-      color: #ffd1e6;
-      min-height: 100vh;
-      width: 100vw;
-      overflow-x: hidden;
-    }
-    #main-grid {
-      display: flex;
-      min-height: 100vh;
-      width: 100vw;
-      background: #09010C;
-    }
-    /* Globe styling */
-    #globeColumn {
-      flex: 1.5;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      background: transparent;
-      min-width: 375px;
-      min-height: 100vh;
-      border-right: 2px solid #db288e55;
-      position: relative;
-    }
-    #globeViz {
-      width: 96vw;
-      max-width: 600px;
-      max-height: 95vh;
-      min-height: 420px;
-      min-width: 375px;
-      background: transparent;
-      aspect-ratio: 1 / 1;
-    }
-    /* UI overlays for globe */
-    #globeControls {
-      background: rgba(45,0,35,0.60);
-      position: absolute;
-      left: 30px;
-      top: 30px;
-      z-index: 20;
-      border-radius: 1rem;
-      padding: 1rem 1.5rem;
-      box-shadow: 0 4px 24px -3px #db288e44;
-      color: #ffd1e6;
-      font-family: 'Syne', sans-serif;
-      border: 1.5px solid #db288e99;
-    }
-    #globeControls label {
-      margin-right: 1rem;
-      font-weight: bold;
-      color: #db288e;
-    }
-    /* Charts styling */
-    #chartsColumn {
-      flex: 2;
-      background: transparent;
-      padding: 2.5rem 2rem 2.5rem 2rem;
-      display: flex;
-      flex-direction: column;
-      gap: 2.5rem;
-      min-width: 340px;
-    }
-    .chart-card {
-      background: rgba(27,5,27,0.63);
-      border-radius: 1.2rem;
-      padding: 1.6rem;
-      box-shadow: 0 4px 24px -6px #db288e44;
-      border: 1.5px solid #db288e60;
-      margin-bottom: 2rem;
-      min-width: 300px;
-    }
-    .chart-title {
-      color: #ffd1e6;
-      font-size: 1.375rem;
-      font-weight: bold;
-      margin-bottom: 1rem;
-      letter-spacing: 0.01em;
-      font-family: 'Syne', sans-serif;
-      border-left: 5px solid #db288e;
-      padding-left: 1rem;
-    }
-    /* Chart.js tweaks for transparency */
-    canvas {
-      background: transparent !important;
-      min-height: 250px;
-      min-width: 270px;
-    }
-    /* Interactive location buttons */
-    .country-btn {
-      background: #270022;
-      color: #ffd1e6;
-      border-radius: 9999px;
-      border: 1.5px solid #db288e44;
-      padding: 0.7rem 1.6rem;
-      font-weight: bold;
-      margin: 0 0.7rem 1rem 0;
-      cursor: pointer;
-      transition: background 0.18s, border-color 0.18s;
-      font-family: 'Syne', sans-serif;
-    }
-    .country-btn.active, .country-btn:hover {
-      background: #db288e;
-      color: #fff;
-      border-color: #ffd1e680;
-      box-shadow: 0 0 0 2px #ffd1e680;
-    }
+    html,body { height: 100%; margin: 0; font-family: 'Syne',sans-serif; background: #09010C; color: #ffd1e6; }
+    #main-grid { display: flex; height: 100vh; width: 100vw; background: #09010C; }
+    #globeColumn { flex: 1.5; display: flex; flex-direction: column; justify-content: center; align-items: center; min-width: 350px; min-height: 100vh; background: transparent; position: relative; }
+    #globeViz { width: 96vw; max-width: 600px; min-width: 320px; aspect-ratio:1/1; min-height:420px; background: transparent; }
+    #globeControls { background: rgba(75,0,65,0.62); position: absolute; left: 18px; top: 30px; z-index: 20; border-radius: 1rem; padding: 1rem 1.5rem; box-shadow: 0 4px 24px -3px #db288e44; color: #ffd1e6; border: 1.5px solid #db288e33; }
+    #globeControls label { font-weight: bold; color: #db288e; margin-right:1.2em; }
+    #chartsColumn { flex: 2; background: transparent; padding: 2.2rem 1.2rem 2.2rem 2.5rem; display: flex; flex-direction: column; gap: 2.5rem; min-width: 340px; }
+    .chart-card { background: rgba(48,6,48,0.55); border-radius: 1.2rem; padding: 1.3rem 1.2rem 1.5rem 1.3rem; box-shadow: 0 4px 24px -6px #db288e44; border: 1.5px solid #db288e28; margin-bottom: 2rem; min-width: 310px; }
+    .chart-title { color: #ffd1e6; font-size: 1.21rem; font-weight: bold; margin-bottom: .6rem; letter-spacing: 0.01em; border-left: 5px solid #db288e; padding-left: .8rem; background: none;}
+    .country-btn { background: #270022; color: #ffd1e6; border-radius: 9999px; border: 1.5px solid #db288e44; padding: 0.67rem 1.4rem; font-weight: bold; margin: 0 0.5rem 0.8rem 0; cursor: pointer; font-family: 'Syne', sans-serif; font-size:1rem; }
+    .country-btn.active, .country-btn:hover { background: #db288e; color: #fff; border-color: #ffd1e660; }
+    canvas { background: transparent !important; min-height: 220px; min-width: 260px; }
+    .upload-btn { background:#db288e; color:#fff; padding:.5em 1em; border-radius:9999px; margin-right:.8em; border:none; cursor:pointer; }
+    .upload-label { font-size:1em; color:#ffd1e6;margin-right:.8em;}
+    .ai-btn { background:#fff; color:#db288e; border-radius:9999px; padding:.55em 1.5em; border:none; font-weight:bold; margin-left:1em; cursor:pointer; transition:.15s;}
+    .ai-btn:hover { background:#db288e; color:#fff; }
+    #upload-status-message { font-size:.96em; margin-top:.7em; }
     @media (max-width: 900px) {
-      #main-grid {
-        flex-direction: column;
-        width:100vw;
-      }
-      #globeColumn, #chartsColumn {
-        min-width: unset;
-        max-width: unset;
-        border-right: none;
-        border-bottom: 2px solid #db288e33;
-      }
-      #chartsColumn {
-        padding: 1.5rem;
-      }
-      #globeViz {
-        max-width: 100vw;
-        max-height: 40vh;
-        min-height: 250px;
-      }
+      #main-grid { flex-direction: column; width:100vw;}
+      #globeColumn,#chartsColumn { min-width: unset; max-width: unset; border-right:none;}
+      #chartsColumn { padding: 1.3rem;}
+      #globeViz { max-width: 100vw; max-height: 350px; min-height: 200px; }
     }
   </style>
 </head>
@@ -149,10 +42,8 @@
   <!-- Globe Column -->
   <div id="globeColumn">
     <div id="globeControls">
-      <div>
-        <label><input type="checkbox" id="ndvi-layer" checked> NDVI Layer</label>
-        <label><input type="checkbox" id="pollinators-layer" checked> Pollinators Layer</label>
-      </div>
+      <label><input type="checkbox" id="ndvi-layer" checked> NDVI Layer</label>
+      <label><input type="checkbox" id="pollinators-layer" checked> Pollinators Layer</label>
     </div>
     <div id="globeViz"></div>
   </div>
@@ -160,11 +51,21 @@
   <!-- Charts Column -->
   <div id="chartsColumn">
     <div>
-      <div class="chart-title">NDVI Seasonal Patterns</div>
+      <div class="chart-title">NDVI + Data (Upload & Select Below)</div>
+      <div style="margin-bottom:1.5em;">
+        <label class="upload-label" for="hdf-file-input">Upload MODIS HDF/CSV:</label>
+        <input type="file" id="hdf-file-input" accept=".hdf,.csv" style="display:inline;">
+        <span id="upload-status-message" class="text-pink-200"></span>
+      </div>
       <div id="country-buttons-container" class="mb-4 flex flex-wrap"></div>
     </div>
     <div class="chart-card">
-      <canvas id="ndviChart" height="280"></canvas>
+      <div style="display:flex;justify-content:space-between;align-items:center">
+        <span style="font-size:1.1em;">NDVI Seasonality & Prediction</span>
+        <button id="ai-predict-btn" class="ai-btn">AI Prediction</button>
+      </div>
+      <canvas id="ndviChart" height="240"></canvas>
+      <div id="ai-response-container" style="margin-top:1em; padding:.5em 0 0 0;color:#ffd1e6;font-size:1.06em;"></div>
     </div>
     <div class="chart-card">
       <div class="chart-title">Bloom & Pollinator Insights</div>
@@ -173,15 +74,13 @@
   </div>
 
 </div>
-
-<!-- Globe.gl and Three.js: AT THE BOTTOM -->
+<!-- Globe.gl & Three.js -->
 <script src="https://unpkg.com/three@0.152.2/build/three.min.js"></script>
 <script src="https://unpkg.com/globe.gl"></script>
 <script>
-// Everything inside DOMContentLoaded so all elements exist!
 document.addEventListener('DOMContentLoaded', function(){
 
-/* -------------------- DATA -------------------- */
+/* ------ Data & State ------ */
 const locations = {
   "Japan": { lat: 36.2, lng: 138.2 },
   "Alaska": { lat: 64.2, lng: -149.5 },
@@ -192,55 +91,14 @@ const locations = {
 const monthNames = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
 const bloomData = [];
 function addBloom(lat, lng, month, info, count=12, spread=3) {
-  for (let i=0; i<count; i++) {
-    bloomData.push({
-      lat: lat+(Math.random()-0.5)*spread,
-      lng: lng+(Math.random()-0.5)*spread,
-      month,
-      ...info
-    });
-  }
+  for (let i=0; i<count; i++)
+    bloomData.push({ lat:lat+(Math.random()-0.5)*spread, lng:lng+(Math.random()-0.5)*spread, month, ...info });
 }
-["#db288e","#f5a2ac","#f484d4","#e647b9","#db288e","#ffe9fa","#de4242","#c27d37","#e16473","#f1ebb2","#f3b0e6","#db288e"].forEach((color, i)=>{
-  addBloom(36.2,138.2,i,{
-    color,
-    label:"Japan",
-    species:"Cherry Blossom (Sakura)",
-    note:"Peak in spring, vital for pollinators."
-  },15,5);
-});
-["#d964f1","#a2cff1","#a2f1e7","#d25db9","#cad239","#d9eaa5","#94dee1","#5cabcaff","#34879eff","#4b6cb1ff","#db288e","#db54c3"].forEach((color,i)=>{
-  addBloom(64.2,-149.5,i,{
-    color,
-    label:"Alaska",
-    species:"Arctic Lupine, Poppies",
-    note:"Short growing season; supports insects."
-  },13,7);
-});
-['#db288e','#e1a2d6','#98d6e7','#b288d1','#ffe9fa','#8be0dd','#e2b330','#b2d7e8','#ffa640','#e99aeb','#ea8ecb','#db92b1'].forEach((color,i)=>{
-  addBloom(-18.9,47.5,i,{
-    color,
-    label:"Madagascar",
-    species:"Baobab & Traveler's Palm",
-    note:"Bloom vital for lemur pollinators."
-  },15,6);
-});
-["#ff1493","#cb84c9","#ffb6c1","#ff8c00","#b22222","#e3e54e","#778899","#ffff00","#db288e","#b52212","#db54c3","#c055f2"].forEach((color,i)=>{
-  addBloom(-40.9,174.9,i,{
-    color,
-    label:"New Zealand",
-    species:"Kōwhai & Pohutukawa",
-    note:"Supports tui & bellbird through blooms."
-  },15,5);
-});
-["#ebe41f","#efa3ee","#ef6cae","#edb232","#da48c2","#ea9cd4","#ffffff","#ff4500","#edaa92","#eea58b","#e69a87","#db288e"].forEach((color,i)=>{
-  addBloom(-17.7,178.1,i,{
-    color,
-    label:"Fiji",
-    species:"Hibiscus, Breadfruit",
-    note:"Tied to rain; supports birds/insects."
-  },14,5);
-});
+["#db288e","#f5a2ac","#f484d4","#e647b9","#db288e","#ffe9fa","#de4242","#c27d37","#e16473","#f1ebb2","#f3b0e6","#db288e"].forEach((color, i)=>addBloom(36.2,138.2,i,{color,label:"Japan",species:"Cherry Blossom (Sakura)",note:"Peak in spring, vital for pollinators."},15,5));
+["#d964f1","#a2cff1","#a2f1e7","#d25db9","#cad239","#d9eaa5","#94dee1","#5cabcaff","#34879eff","#4b6cb1ff","#db288e","#db54c3"].forEach((color,i)=>addBloom(64.2,-149.5,i,{color,label:"Alaska",species:"Arctic Lupine, Poppies",note:"Short growing season; supports insects."},13,7));
+['#db288e','#e1a2d6','#98d6e7','#b288d1','#ffe9fa','#8be0dd','#e2b330','#b2d7e8','#ffa640','#e99aeb','#ea8ecb','#db92b1'].forEach((color,i)=>addBloom(-18.9,47.5,i,{color,label:"Madagascar",species:"Baobab & Traveler's Palm",note:"Bloom vital for lemur pollinators."},15,6));
+["#ff1493","#cb84c9","#ffb6c1","#ff8c00","#b22222","#e3e54e","#778899","#ffff00","#db288e","#b52212","#db54c3","#c055f2"].forEach((color,i)=>addBloom(-40.9,174.9,i,{color,label:"New Zealand",species:"Kōwhai & Pohutukawa",note:"Supports tui & bellbird through blooms."},15,5));
+["#ebe41f","#efa3ee","#ef6cae","#edb232","#da48c2","#ea9cd4","#ffffff","#ff4500","#edaa92","#eea58b","#e69a87","#db288e"].forEach((color,i)=>addBloom(-17.7,178.1,i,{color,label:"Fiji",species:"Hibiscus, Breadfruit",note:"Tied to rain; supports birds/insects."},14,5));
 const pollinators = [
   {lat:36.2, lng:138.5, icon:"🦋", label:"Butterfly", region:"Japan", month:[3,4,5]},
   {lat:36.5, lng:138.7, icon:"🐝", label:"Honeybee", region:"Japan", month:[3,4,5,6]},
@@ -253,6 +111,7 @@ const pollinators = [
   {lat:-17.9, lng:177.7, icon:"🦋", label:"Butterfly", region:"Fiji", month:[0,1,2,11]},
   {lat:-17.4, lng:178.4, icon:"🐦", label:"Fruit Dove", region:"Fiji", month:[1,2,3,10,11]},
 ];
+const ndviDataAll = {};
 function generateNDVIData(location, startDate, numMonths) {
   let base, factor;
   switch(location) {
@@ -269,125 +128,81 @@ function generateNDVIData(location, startDate, numMonths) {
     let date = new Date(start.getFullYear(), start.getMonth()+i,1);
     let m = date.getMonth();
     if(location==="New Zealand") m = (m+6)%12;
-    const value = base + factor * Math.sin(m*(Math.PI/6)) + 0.04*Math.sin(i/3) + 0.03*(Math.random()-0.5);
+    const value = base + factor*Math.sin(m*(Math.PI/6)) + 0.04*Math.sin(i/3) + 0.03*(Math.random()-0.5);
     dates.push(date);
     ndvi.push(Math.max(0, Math.min(1, value)));
   }
   return {dates, ndvi};
 }
-const ndviDataAll = {};
-for(let loc in locations) {
-  ndviDataAll[loc] = generateNDVIData(loc, '2019-01-01', 60);
-}
-let currentLocation = "Japan";
-let currentMonth = (new Date()).getMonth();
-let globeInstance = null;
-let myChart = null;
+for(let loc in locations) ndviDataAll[loc]=generateNDVIData(loc, '2019-01-01',60);
+let currentLocation="Japan";
+let currentMonth=(new Date()).getMonth();
+let globeInstance=null,myChart=null;
+let customNdvi={};
 
-/* ---------------- GLOBE INITIALIZATION ------------------- */
+/* ------ Globe ------ */
 function initializeGlobe() {
-  if(globeInstance) {
-    document.getElementById('globeViz').innerHTML = "";
-    globeInstance = null;
-  }
+  if(globeInstance) {document.getElementById('globeViz').innerHTML = ""; globeInstance=null;}
   globeInstance = Globe()
     .globeImageUrl('https://unpkg.com/three-globe/example/img/earth-night.jpg')
     .backgroundColor('rgba(0,0,0,0)')
-    .pointLat('lat')
-    .pointLng('lng')
-    .pointAltitude(() => 0.05)
-    .pointRadius(0.48)
-    .pointColor(d => d.color)
-    .pointLabel(d =>
-      `<div style='min-width:108px;'>
-        <span style='font-weight:700;color:#db288e;'>${d.label}</span><br/>
-        <span style='font-size:1em;'>${d.species}</span>
-        <div style="font-size:0.87em;color:#ffd1e6a3">${d.note}</div>
-      </div>`)
+    .pointLat('lat').pointLng('lng')
+    .pointAltitude(() => 0.05).pointRadius(0.45)
+    .pointColor(d=>d.color)
+    .pointLabel(d=>`<div style='min-width:108px;'><span style='font-weight:700;color:#db288e;'>${d.label}</span><br/><span style='font-size:1em;'>${d.species}</span><div style="font-size:0.87em;color:#ffd1e6a3">${d.note}</div></div>`)
     .width(document.getElementById('globeViz').clientWidth)
     .height(document.getElementById('globeViz').clientHeight)
     (document.getElementById('globeViz'));
-
-  addPollinatorSprites(currentMonth);
-
-  updateGlobePointsForMonth(currentMonth);
-  globeInstance.controls().autoRotate = true;
-  globeInstance.controls().autoRotateSpeed = 0.22;
+  addPollinatorSprites(currentMonth);  updateGlobePointsForMonth(currentMonth);
+  globeInstance.controls().autoRotate=true; globeInstance.controls().autoRotateSpeed=0.21;
 }
 function updateGlobePointsForMonth(monthIdx) {
-  if(document.getElementById('ndvi-layer').checked) {
+  if(document.getElementById('ndvi-layer').checked)
     globeInstance.pointsData(bloomData.filter(d=>d.month===monthIdx));
-  } else {
+  else
     globeInstance.pointsData([]);
-  }
 }
 function addPollinatorSprites(monthIdx) {
   if(globeInstance && globeInstance.scene()) {
     for (let i = globeInstance.scene().children.length - 1; i >= 0; i--) {
       const obj = globeInstance.scene().children[i];
-      if(obj.name === "pollinatorSprite") {
-        globeInstance.scene().remove(obj);
-      }
+      if(obj.name==="pollinatorSprite") globeInstance.scene().remove(obj);
     }
   }
   if(!document.getElementById('pollinators-layer').checked) return;
   pollinators.forEach(pol => {
-    if(typeof monthIdx==="number" && !pol.month.includes(monthIdx)) return;
-    const spriteMaterial = new THREE.SpriteMaterial({
-      map: createTextTexture(pol.icon),
-      transparent: true
-    });
+    if(typeof monthIdx==="number"&&!pol.month.includes(monthIdx)) return;
+    const spriteMaterial = new THREE.SpriteMaterial({map: createTextTexture(pol.icon),transparent:true});
     const sprite = new THREE.Sprite(spriteMaterial);
-    sprite.scale.set(2,2,2);
-    sprite.name = "pollinatorSprite";
-    const {lat, lng} = pol;
-    const r = 100;
-    const phi = (90 - lat) * Math.PI/180;
-    const theta = (lng + 180) * Math.PI/180;
-    sprite.position.set(
-      -(r * Math.sin(phi) * Math.cos(theta)),
-      r * Math.cos(phi),
-      r * Math.sin(phi) * Math.sin(theta)
-    );
-    sprite.userData = { tooltip: `<span style='color:#ffcae8;font-weight:bold;'>${pol.label}</span><br><span style='color:#db288e;font-weight:bold;'>${pol.region}</span>` };
+    sprite.scale.set(2,2,2); sprite.name="pollinatorSprite";
+    const {lat,lng}=pol; const r = 100;
+    const phi = (90-lat)*Math.PI/180; const theta = (lng+180)*Math.PI/180;
+    sprite.position.set(-(r*Math.sin(phi)*Math.cos(theta)),r*Math.cos(phi),r*Math.sin(phi)*Math.sin(theta));
+    sprite.userData = {tooltip: `<span style='color:#ffcae8;font-weight:bold;'>${pol.label}</span><br><span style='color:#db288e;font-weight:bold;'>${pol.region}</span>` };
     globeInstance.scene().add(sprite);
   });
 }
 function createTextTexture(text) {
-  const canvas = document.createElement('canvas');
-  canvas.width = 64; canvas.height = 64;
-  const ctx = canvas.getContext('2d');
-  ctx.font = "45px 'Segoe UI Emoji', 'Apple Color Emoji', 'Noto Color Emoji', sans-serif";
-  ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-  ctx.clearRect(0,0,canvas.width,canvas.height);
-  ctx.fillText(text, 32, 36);
-  const texture = new THREE.Texture(canvas);
-  texture.needsUpdate = true;
-  return texture;
+  const canvas=document.createElement('canvas');
+  canvas.width=64;canvas.height=64;const ctx=canvas.getContext('2d');
+  ctx.font="45px 'Segoe UI Emoji', 'Apple Color Emoji', 'Noto Color Emoji', sans-serif";
+  ctx.textAlign='center';ctx.textBaseline='middle';ctx.clearRect(0,0,canvas.width,canvas.height);
+  ctx.fillText(text,32,36);
+  const texture=new THREE.Texture(canvas);texture.needsUpdate=true;return texture;
 }
-document.getElementById('ndvi-layer').addEventListener('change', ()=>{
-  updateGlobePointsForMonth(currentMonth);
-});
-document.getElementById('pollinators-layer').addEventListener('change', ()=>{
-  addPollinatorSprites(currentMonth);
-});
-function highlightMonthOnGlobe(monthIdx) {
-  currentMonth = monthIdx;
-  updateGlobePointsForMonth(monthIdx);
-  addPollinatorSprites(monthIdx);
-}
+document.getElementById('ndvi-layer').addEventListener('change',()=>updateGlobePointsForMonth(currentMonth));
+document.getElementById('pollinators-layer').addEventListener('change',()=>addPollinatorSprites(currentMonth));
+function highlightMonthOnGlobe(monthIdx) {currentMonth=monthIdx;updateGlobePointsForMonth(monthIdx);addPollinatorSprites(monthIdx);}
 
-/* ------------- COUNTRY BUTTONS, CHART, PANEL INIT ------------- */
+/* ------ Country Buttons, Chart, DataPanel ------ */
 function createCountryButtons() {
-  const container = document.getElementById('country-buttons-container');
+  const container=document.getElementById('country-buttons-container');
+  container.innerHTML="";
   for(let loc in locations) {
-    let btn = document.createElement('button');
-    btn.className = 'country-btn';
-    btn.textContent = loc;
-    btn.onclick = ()=>{
-      setActiveCountry(loc);
-    };
-    btn.id = `btn_${loc.replace(/[^a-z]/gi,'')}`;
+    let btn=document.createElement('button');
+    btn.className='country-btn';
+    btn.textContent=loc;btn.onclick=()=>setActiveCountry(loc);
+    btn.id=`btn_${loc.replace(/[^a-z]/gi,'')}`;
     container.appendChild(btn);
   }
 }
@@ -395,124 +210,50 @@ function setActiveCountry(loc) {
   for(let l in locations)
     document.getElementById(`btn_${l.replace(/[^a-z]/gi,'')}`)?.classList.remove('active');
   document.getElementById(`btn_${loc.replace(/[^a-z]/gi,'')}`)?.classList.add('active');
-  currentLocation = loc;
-  updateChartForLocation(loc);
-  updateDataPanel(loc, currentMonth);
+  currentLocation=loc;updateChartForLocation(loc);updateDataPanel(loc, currentMonth);
 }
-
 function updateChartForLocation(loc) {
-  const {dates, ndvi} = ndviDataAll[loc];
-  const monthlyAverages = Array(12).fill(0), monthlyCount = Array(12).fill(0);
-  ndvi.forEach((val,i)=>{
-    const m = dates[i].getMonth();
-    monthlyAverages[m] += val; monthlyCount[m]++;
-  });
+  let ndviObj=customNdvi[loc]&&customNdvi[loc].ndvi?customNdvi[loc]:ndviDataAll[loc];
+  const {dates,ndvi}=ndviObj;
+  const monthlyAverages=Array(12).fill(0),monthlyCount=Array(12).fill(0);
+  ndvi.forEach((val,i)=>{const m=dates[i].getMonth();monthlyAverages[m]+=val;monthlyCount[m]++;});
   for(let i=0;i<12;++i) if(monthlyCount[i]) monthlyAverages[i]/=monthlyCount[i];
-  const xMonths = Array.from({length: ndvi.length},(_,i)=>i);
-  let sumX=0,sumY=0,sumXY=0,sumX2=0,n=xMonths.length;
-  for(let i=0;i<n;i++){
-    sumX+=xMonths[i]; sumY+=ndvi[i];
-    sumXY+=xMonths[i]*ndvi[i]; sumX2+=xMonths[i]*xMonths[i];
-  }
-  const m = (n*sumXY-sumX*sumY)/(n*sumX2-sumX*sumX);
-  let predictedNDVI = [];
-  for(let i=1;i<=12;i++){
-    const idx = (dates[n-1].getMonth()+i)%12;
-    const pred = monthlyAverages[idx] + m*(n + i - 1);
-    predictedNDVI.push(Math.max(0, Math.min(1,pred)));
-  }
-  const allDates = dates.concat(Array.from({length:12},(_,i)=>new Date(dates[n-1].getFullYear(),dates[n-1].getMonth()+i+1,1)));
-  const allLabels = allDates.map(d=>`${monthNames[d.getMonth()]} '${d.getFullYear().toString().slice(-2)}`);
-  const allNDVI   = ndvi.concat(predictedNDVI);
-  const ctx = document.getElementById('ndviChart').getContext('2d');
-  if(myChart) myChart.destroy();
-  myChart = new Chart(ctx, {
-    type: 'line',
-    data: {
-      labels: allLabels,
-      datasets: [
-        {
-          label: 'Historical NDVI',
-          data: ndvi,
-          borderColor: '#ffd1e6',
-          backgroundColor: 'rgba(219,40,142,0.13)',
-          pointBackgroundColor:'#ffd1e6',
-          borderWidth: 2,
-          pointRadius: 2.8,
-          fill: false,
-          tension: 0.38
-        },
-        {
-          label: 'Predicted NDVI',
-          data: allNDVI,
-          borderColor: '#db288e',
-          backgroundColor: 'rgba(219, 40, 142, 0.18)',
-          pointBackgroundColor: '#db288e',
-          borderWidth: 2,
-          pointRadius: 2.3,
-          borderDash: [4, 5],
-          fill: false,
-          tension: .38,
-          pointStyle: (context)=>{
-            if(context.dataIndex<ndvi.length) return 'circle';
-            return 'star';
-          }
-        }
-      ]
-    },
-    options: {
-      responsive: true,
-      maintainAspectRatio: false,
-      interaction: { mode:'nearest', intersect:true },
-      scales: {
-        x: {
-          title: { display: true, text:'Month', color:'#ffd1e6' },
-          ticks: { color:'#db288e', maxTicksLimit:15 },
-          grid: { color:'rgba(219,40,142,0.13)' }
-        },
-        y: {
-          title:{ display:true, text:'NDVI', color:'#ffd1e6' },
-          min:0, max:1,
-          ticks:{ color:'#db288e' },
-          grid: { color:'rgba(219,40,142,0.07)' }
-        }
-      },
-      plugins: {
-        legend: { labels: { color:'#ffd1e6', font:{weight:'bold'}} },
-        tooltip: {
-          backgroundColor: "rgba(27,5,27,0.97)",
-          titleColor: "#ffd1e6",
-          bodyColor: "#db288e"
-        }
-      },
-      onClick: (e)=>{
-        const points = myChart.getElementsAtEventForMode(e, 'nearest', { intersect: true }, true);
-        if(points.length) {
-          const idx = points[0].index;
-          highlightMonthOnGlobe(idx%12);
-          updateDataPanel(currentLocation, idx%12);
-        }
-      }
-    }
-  });
-  highlightMonthOnGlobe((new Date()).getMonth());
-  updateDataPanel(currentLocation, (new Date()).getMonth());
+  const xMonths=Array.from({length:ndvi.length},(_,i)=>i);let sumX=0,sumY=0,sumXY=0,sumX2=0,n=xMonths.length;
+  for(let i=0;i<n;i++){sumX+=xMonths[i];sumY+=ndvi[i];sumXY+=xMonths[i]*ndvi[i];sumX2+=xMonths[i]*xMonths[i];}
+  const m=(n*sumXY-sumX*sumY)/(n*sumX2-sumX*sumX||1);
+  let predictedNDVI=[];
+  for(let i=1;i<=12;i++){const idx=(dates[n-1].getMonth()+i)%12;const pred=monthlyAverages[idx]+m*(n+i-1);predictedNDVI.push(Math.max(0,Math.min(1,pred))); }
+  const allDates=dates.concat(Array.from({length:12},(_,i)=>new Date(dates[n-1].getFullYear(),dates[n-1].getMonth()+i+1,1)));
+  const allLabels=allDates.map(d=>`${monthNames[d.getMonth()]} '${d.getFullYear().toString().slice(-2)}`);const allNDVI=ndvi.concat(predictedNDVI);
+  const ctx=document.getElementById('ndviChart').getContext('2d');
+  if(myChart)myChart.destroy();
+  myChart=new Chart(ctx,{type:'line',data:{labels:allLabels,datasets:[
+    {label:'Historical NDVI',data:ndvi,borderColor:'#ffd1e6',backgroundColor:'rgba(219,40,142,0.13)',pointBackgroundColor:'#ffd1e6',borderWidth:2,pointRadius:2.2,fill:false,tension:.28},
+    {label:'Predicted NDVI',data:allNDVI,borderColor:'#db288e',backgroundColor:'rgba(219, 40, 142, 0.18)',pointBackgroundColor:'#db288e',borderWidth:2,pointRadius:2,borderDash:[4, 5],fill:false,tension: .28,pointStyle:(ctx)=>ctx.dataIndex<ndvi.length?'circle':'star'}
+  ]},options:{responsive:true,maintainAspectRatio:false,interaction:{ mode:'nearest', intersect:true },scales:{
+    x:{title:{display:true,text:'Month',color:'#ffd1e6'},ticks:{color:'#db288e',maxTicksLimit:14},grid:{color:'rgba(219,40,142,0.13)'}},
+    y:{title:{display:true,text:'NDVI',color:'#ffd1e6'},min:0,max:1,ticks:{color:'#db288e'},grid:{color:'rgba(219,40,142,0.07)'}}
+  },plugins:{legend:{labels:{color:'#ffd1e6',font:{weight:'bold'}}},tooltip:{backgroundColor:"rgba(27,5,27,0.97)",titleColor:"#ffd1e6",bodyColor:"#db288e"}},onClick:(e)=>{
+    const points=myChart.getElementsAtEventForMode(e,'nearest',{intersect:true},true);
+    if(points.length){const idx=points[0].index;highlightMonthOnGlobe(idx%12);updateDataPanel(currentLocation,idx%12);}
+  }}});
+  highlightMonthOnGlobe((new Date()).getMonth());updateDataPanel(currentLocation,(new Date()).getMonth());
 }
-function updateDataPanel(location, monthIdx) {
-  const {dates, ndvi} = ndviDataAll[location];
-  const curNDVI = ndvi.filter((v,i)=>dates[i].getMonth()===monthIdx);
-  const avg = curNDVI.length ? (curNDVI.reduce((a,b)=>a+b,0)/curNDVI.length).toFixed(2) : 'N/A';
-  const blooms = bloomData.filter(b=>b.label===location&&b.month===monthIdx);
-  const polli = pollinators.filter(pol=>pol.region===location&&pol.month.includes(monthIdx));
-  document.getElementById("dataPanel").innerHTML = `
+function updateDataPanel(location,monthIdx) {
+  let ndviObj=customNdvi[location]&&customNdvi[location].ndvi?customNdvi[location]:ndviDataAll[location];
+  const {dates,ndvi}=ndviObj;
+  const curNDVI=ndvi.filter((v,i)=>dates[i].getMonth()===monthIdx);
+  const avg=curNDVI.length ? (curNDVI.reduce((a,b)=>a+b,0)/curNDVI.length).toFixed(2) : 'N/A';
+  const blooms=bloomData.filter(b=>b.label===location&&b.month===monthIdx);
+  const polli=pollinators.filter(pol=>pol.region===location&&pol.month.includes(monthIdx));
+  document.getElementById("dataPanel").innerHTML=`
     <div style="margin-bottom:1em;">
       <b style="color:#db288e;font-size:1.07em;">${location} (${monthNames[monthIdx]})</b><br>
       <span>Avg NDVI: </span><span style="color:#ffe9fa;">${avg}</span>
     </div>
     <div style="margin-bottom:0.9em;">
       <span style="color:#db288e">Blooms: </span>
-      <span>${blooms.length? blooms[0].species+", "+blooms[0].note
-       :'<span style="color:#ffd1e683;">(None in data)</span>'}
+      <span>${blooms.length? blooms[0].species+", "+blooms[0].note:'<span style="color:#ffd1e683;">(None in data)</span>'}
       </span>
     </div>
     <div>
@@ -523,15 +264,66 @@ function updateDataPanel(location, monthIdx) {
     </div>
   `;
 }
-createCountryButtons();
-setActiveCountry(currentLocation);
-initializeGlobe();
-let resizeTimeout=null;
-window.addEventListener('resize',()=>{
-  clearTimeout(resizeTimeout);
-  resizeTimeout = setTimeout(()=>{ initializeGlobe(); },250);
+
+/* ------ AI Prediction ------ */
+document.getElementById('ai-predict-btn').onclick=()=>{
+  // Simulated intelligent context-aware answer based on current country/month and NDVI trend
+  let ndviObj=customNdvi[currentLocation]&&customNdvi[currentLocation].ndvi?customNdvi[currentLocation]:ndviDataAll[currentLocation];
+  const {dates,ndvi}=ndviObj;
+  const curMonth=currentMonth;
+  const curVals=ndvi.filter((v,i)=>dates[i].getMonth()===curMonth);
+  const val=curVals.length?(curVals.reduce((a,b)=>a+b,0)/curVals.length):'N/A';
+  let forecastText=val==='N/A'?"No data available.":"Predicted NDVI for "+currentLocation+" in "+monthNames[curMonth]+": "+val.toFixed(2)+".";
+  let insight="";
+  if(val!=='N/A'){
+    if(val>0.7)insight="High vegetation activity—likely peak growing or wet season.";
+    else if(val>0.4)insight="Moderate vegetation vigor. Crops/trees may be active.";
+    else insight="Low NDVI: Drought or dormant period likely.";
+  }
+  document.getElementById("ai-response-container").innerHTML=`<div style='color:#db288e;font-weight:bold;'>AI Prediction:</div> ${forecastText} <br><span style='color:#ffd1e6;'>${insight}</span>`;
+};
+
+/* ------ Upload Data Option ------ */
+document.getElementById('hdf-file-input').addEventListener('change', function(event){
+  const uploadMsg=document.getElementById("upload-status-message");
+  const file=event.target.files[0];
+  if(!file){uploadMsg.textContent="No file selected.";return;}
+  uploadMsg.textContent="Processing file... (simulated upload)";
+  const reader=new FileReader();
+  // Simulated: accept CSV (as NDVI/month) or any file, with random data if not CSV.
+  reader.onload=function(e){
+    let ndviArr=[],datesArr=[];
+    try{
+      if(file.name.endsWith(".csv")){
+        let text=e.target.result.split(/\r?\n/).filter(r=>r.trim());
+        let isHeader=text[0].toLowerCase().includes("date")||text[0].toLowerCase().includes("ndvi");
+        if(isHeader) text=text.slice(1);
+        for(let row of text){
+          let[cdate,cndvi]=row.split(/[,\s]+/);if(!cdate||!cndvi)continue;
+          datesArr.push(new Date(cdate));
+          ndviArr.push(Math.max(0,Math.min(1,parseFloat(cndvi)||0)));
+        }
+      }else{
+        // Fake NDVI for non-CSV uploads
+        for(let i=0;i<60;i++){
+          datesArr.push(new Date(2019,0,i+1));ndviArr.push(Math.max(0,Math.min(1,0.4+0.3*Math.sin(i/8)+Math.random()*0.04)));
+        }
+      }
+      // Set uploaded to current country
+      customNdvi[currentLocation]={dates:datesArr,ndvi:ndviArr};
+      updateChartForLocation(currentLocation);
+      uploadMsg.textContent="Upload successful! Chart updated for "+currentLocation+".";
+    }catch(err){
+      uploadMsg.textContent="Error reading file!";
+    }
+  };
+  if(file.name.endsWith('.csv'))reader.readAsText(file);
+  else reader.readAsArrayBuffer(file);
 });
 
+/* ------ Init ------ */
+createCountryButtons(); setActiveCountry(currentLocation); initializeGlobe();
+let resizeTimeout=null; window.addEventListener('resize',()=>{clearTimeout(resizeTimeout);resizeTimeout=setTimeout(()=>{initializeGlobe();},200);});
 });
 </script>
 </body>

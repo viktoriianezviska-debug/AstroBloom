@@ -1,29 +1,30 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>AstroBloom: Interactive Globe & NDVI</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AstroBloom Premium</title>
 
-<!-- Tailwind -->
+<!-- Tailwind CSS -->
 <script src="https://cdn.tailwindcss.com"></script>
 <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;700&display=swap" rel="stylesheet">
-
-<!-- Chart.js -->
-<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 
 <!-- Three.js + Globe.gl -->
 <script src="https://unpkg.com/three"></script>
 <script src="https://unpkg.com/globe.gl"></script>
 
+<!-- Chart.js -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+
 <style>
-  html, body { margin: 0; padding: 0; height: 100%; font-family: 'Syne', sans-serif; background: #000; color: #fff; overflow: hidden; }
-  #globeContainer { flex: 1; position: relative; }
-  #globeViz { width: 100%; height: 100%; }
-  #sliderContainer { position: absolute; bottom: 20px; width: 100%; text-align: center; color: #fff; }
-  input[type=range] { width: 60%; }
-  #playBtn { margin-top: 10px; padding: 6px 14px; border-radius: 6px; border: none; cursor: pointer; background: #ff1493; color: white; }
-  .chart-card { background: #111; border-radius: 1rem; padding: 1.5rem; box-shadow: 0 4px 12px rgba(255,20,147,0.3); margin-top: 1rem; }
+  html, body { margin:0; padding:0; height:100%; font-family:'Syne',sans-serif; background:#000; color:#fff; overflow:hidden; }
+  #globeContainer { flex:1; position:relative; }
+  #globeViz { width:100%; height:100%; }
+  #sliderContainer { position:absolute; bottom:20px; width:100%; text-align:center; color:#fff; }
+  input[type=range] { width:60%; accent-color:#ff1493; }
+  #playBtn { margin-top:10px; padding:6px 14px; border-radius:6px; border:none; cursor:pointer; background:#ff1493; color:white; font-weight:600; transition:0.2s; }
+  #playBtn:hover{background:#ff66b3;}
+  .chart-card { background: #111; border-radius: 1rem; padding: 1.5rem; box-shadow: 0 8px 20px rgba(255,20,147,0.3); margin-top:1rem; }
   .chart-container { height: 250px; }
   .panel-section { margin-top: 1.5rem; }
   #country-buttons-container button { transition: all 0.2s; }
@@ -92,24 +93,25 @@
 
 <script>
 // --- Data ---
-const monthNames = ["January","February","March","April","May","June","July","August","September","October","November","December"];
-const locations = {
-  "Japan": { lat: 36.2048, lon: 138.2529 },
-  "Alaska": { lat: 64.2008, lon: -149.4937 },
-  "Madagascar": { lat: -18.7669, lon: 46.8691 },
-  "New Zealand": { lat: -40.9006, lon: 174.8860 },
-  "Fiji": { lat: -17.7134, lon: 178.0650 }
+const monthNames=["January","February","March","April","May","June","July","August","September","October","November","December"];
+const locations={
+  "Japan": { lat:36.2048, lon:138.2529 },
+  "Alaska": { lat:64.2008, lon:-149.4937 },
+  "Madagascar": { lat:-18.7669, lon:46.8691 },
+  "New Zealand": { lat:-40.9006, lon:174.8860 },
+  "Fiji": { lat:-17.7134, lon:178.0650 }
 };
-let currentLocation = 'Japan';
-let bloomData = [];
+let currentLocation="Japan";
+let bloomData=[];
 
-function addBloom(lat,lng,month,info,count=10,spread=3){
+// --- Add Bloom Points ---
+function addBloom(lat,lng,month,info,count=15,spread=3){
   for(let i=0;i<count;i++){
     bloomData.push({lat:lat+(Math.random()-0.5)*spread,lng:lng+(Math.random()-0.5)*spread,month,...info});
   }
 }
 
-// --- Sample blooms ---
+// --- Sample Blooms with colors ---
 ["#e8eb49","#f5a2ac","#f484d4","#e647b9","#ab8aec","#d56de3","#e898ec","#f399f0","#de4242","#c27d37","#e16473","#f1ebb2"].forEach((c,i)=>addBloom(36.2,138.2,i,{color:c,label:"Japan",species:"Cherry Blossom - Sakura",note:"Cultural symbol"}));
 ["#83b1dd","#649ac8","#a2d7ec","#6a5acd","#8f2da0","#d25db9","#cad239","#d9eaa5","#94dee1","#5cabcaff","#34879e","#4b6cb1"].forEach((c,i)=>addBloom(64.2,-149.5,i,{color:c,label:"Alaska",species:"Lupine & Arctic Poppy",note:"Short season"}));
 ["#2e7d32","#4b9d4f","#6bc56f","#e1a2d6","#8be0dd","#98d6e7","#8ae5e5","#9adbed","#c71585","#edb232","#e2b330","#b288d1"].forEach((c,i)=>addBloom(-18.9,47.5,i,{color:c,label:"Madagascar",species:"Baobab & Palm",note:"Unique flora"}));
@@ -117,34 +119,30 @@ function addBloom(lat,lng,month,info,count=10,spread=3){
 ["#ebe41f","#efa3ee","#e28ee8","#ef6cae","#ea9cd4","#da48c2","#ffffff","#ff4500","#ea8ecb","#edaa92","#eea58b","#e69a87"].forEach((c,i)=>addBloom(-17.7,178.1,i,{color:c,label:"Fiji",species:"Hibiscus & Breadfruit",note:"Tied to rainfall"}));
 
 // --- Globe ---
-const GlobeObj = Globe()
+const GlobeObj=Globe()
   .globeImageUrl('//unpkg.com/three-globe/example/img/earth-blue-marble.jpg')
-  .pointAltitude(d=>0.02+0.02*Math.sin(Date.now()*0.005+d.lat))
+  .pointAltitude(d=>0.01+0.03*Math.abs(Math.sin(Date.now()*0.003+d.lat)))
   .pointRadius(0.4)
   .pointColor(d=>d.color)
+  .pointsTransitionDuration(800)
   .pointLabel(d=>`<b>${d.label}</b><br><i>${d.species}</i><br>${d.note}`);
 GlobeObj(document.getElementById('globeViz'));
-GlobeObj.controls().autoRotate = true; 
-GlobeObj.controls().autoRotateSpeed = 0.2;
+GlobeObj.controls().autoRotate=true; 
+GlobeObj.controls().autoRotateSpeed=0.25;
 
-// --- Slider ---
-const slider = document.getElementById("monthSlider");
-const label = document.getElementById("monthLabel");
+// --- Slider & Play ---
+const slider=document.getElementById("monthSlider");
+const label=document.getElementById("monthLabel");
 function updateGlobe(monthIndex){
-  label.textContent = monthNames[monthIndex];
-  GlobeObj.pointsData(bloomData.filter(d=>d.month===monthIndex));
+  label.textContent=monthNames[monthIndex];
+  let points=bloomData.filter(d=>d.month===monthIndex);
+  points.forEach(p=>{ p.color = (p.label===currentLocation) ? '#ff1493' : p.color; });
+  GlobeObj.pointsData(points);
 }
 updateGlobe(0);
 slider.addEventListener("input", e=>updateGlobe(parseInt(e.target.value)));
 
-// --- Animate Globe Points ---
-(function animate(){
-  GlobeObj.pointAltitude(d=>0.02+0.02*Math.sin(Date.now()*0.005+d.lat));
-  requestAnimationFrame(animate);
-})();
-
-// --- Play Button ---
-let isPlaying=false; 
+let isPlaying=false;
 let playInterval;
 document.getElementById("playBtn").addEventListener("click",()=>{
   if(!isPlaying){
@@ -163,10 +161,7 @@ document.getElementById("playBtn").addEventListener("click",()=>{
 });
 
 // --- NDVI Chart ---
-let myChart; 
-let selectedDataPointIndex=null; 
-let fetchedNDVIData={};
-
+let myChart, selectedDataPointIndex=null, fetchedNDVIData={};
 function generateNDVIData(location,startDate,numMonths){
   const dates=[], ndvi=[];
   const start=new Date(startDate);
@@ -182,46 +177,35 @@ function generateNDVIData(location,startDate,numMonths){
   for(let i=0;i<numMonths;i++){
     const date=new Date(start.getFullYear(),start.getMonth()+i,1);
     dates.push(date);
-    let month=date.getMonth();
-    if(location==="New Zealand"){ month=(month+6)%12; }
-    const val=base+seasonal*Math.sin(month*(Math.PI/6))+0.03*(Math.random()-0.5);
+    const month=date.getMonth();
+    let val=base+seasonal*Math.sin(month*(Math.PI/6))+0.03*(Math.random()-0.5);
     ndvi.push(Math.max(0,Math.min(1,val)));
   }
   return {dates,ndvi};
 }
-
 async function fetchDataAndLoad(){
   const ndviData={};
-  for(const loc in locations){
-    ndviData[loc]=generateNDVIData(loc,'2018-01-01',60);
-  }
+  for(const loc in locations){ ndviData[loc]=generateNDVIData(loc,'2018-01-01',60); }
   return ndviData;
 }
 
-// --- Update Chart ---
 function updateChart(locationName){
   currentLocation=locationName;
   const chartData=fetchedNDVIData[locationName];
   if(!chartData) return;
 
-  document.getElementById('ndviChart').classList.remove('hidden');
   document.getElementById('chart-status').style.display='none';
-
-  const monthlyAverages=new Array(12).fill(0);
-  const monthlyCounts=new Array(12).fill(0);
+  const monthlyAvg=new Array(12).fill(0);
+  const monthlyCnt=new Array(12).fill(0);
   chartData.dates.forEach((date,i)=>{
-    const month=date.getMonth();
-    monthlyAverages[month]+=chartData.ndvi[i];
-    monthlyCounts[month]++;
+    const m=date.getMonth();
+    monthlyAvg[m]+=chartData.ndvi[i]; monthlyCnt[m]++;
   });
-  const seasonalPattern=monthlyAverages.map((sum,month)=>sum/monthlyCounts[month]);
+  const seasonal=monthlyAvg.map((sum,i)=>sum/monthlyCnt[i]);
 
-  const xMonths=Array.from({length:chartData.dates.length},(_,i)=>i);
-  let sumX=0,sumY=0,sumXY=0,sumX2=0;
-  const n=xMonths.length;
-  for(let i=0;i<n;i++){
-    sumX+=xMonths[i]; sumY+=chartData.ndvi[i]; sumXY+=xMonths[i]*chartData.ndvi[i]; sumX2+=xMonths[i]*xMonths[i];
-  }
+  const xMonths=chartData.dates.map((_,i)=>i);
+  let sumX=0,sumY=0,sumXY=0,sumX2=0,n=xMonths.length;
+  for(let i=0;i<n;i++){ sumX+=xMonths[i]; sumY+=chartData.ndvi[i]; sumXY+=xMonths[i]*chartData.ndvi[i]; sumX2+=xMonths[i]*xMonths[i]; }
   const m=(n*sumXY-sumX*sumY)/(n*sumX2-sumX*sumX);
 
   const futureDates=[], predictedNDVI=[];
@@ -229,8 +213,8 @@ function updateChart(locationName){
   for(let i=1;i<=12;i++){
     const futureDate=new Date(lastMonth.getFullYear(),lastMonth.getMonth()+i,1);
     const futureMonthIndex=futureDate.getMonth();
-    const futureMonthTotalIndex=chartData.dates.length+i-1;
-    const prediction=seasonalPattern[futureMonthIndex]+(m*futureMonthTotalIndex);
+    const futureTotalIndex=chartData.dates.length+i-1;
+    const prediction=seasonal[futureMonthIndex]+m*futureTotalIndex;
     predictedNDVI.push(Math.max(0,Math.min(1,prediction)));
     futureDates.push(futureDate);
   }
@@ -243,10 +227,10 @@ function updateChart(locationName){
   myChart=new Chart(ctx,{
     type:'line',
     data:{
-      labels: allDates.map(d=>d.toLocaleString('default',{month:'short',year:'numeric'})),
+      labels:allDates.map(d=>d.toLocaleString('default',{month:'short',year:'numeric'})),
       datasets:[
-        {label:'Historical NDVI',data:chartData.ndvi,borderColor:'#2ca02c',backgroundColor:'rgba(44,160,44,0.2)',pointBackgroundColor:'#2ca02c',borderWidth:2,pointRadius:3,fill:false,tension:0.4},
-        {label:'Predicted NDVI',data:allNDVI,borderColor:'#ff1493',backgroundColor:'rgba(255,20,147,0.2)',pointBackgroundColor:'#ff1493',borderWidth:2,pointRadius:3,fill:false,borderDash:[5,5],tension:0.4}
+        {label:'Historical NDVI',data:chartData.ndvi,borderColor:'#2ca02c',backgroundColor:'rgba(44,160,44,0.2)',pointBackgroundColor:'#2ca02c',borderWidth:2,pointRadius:3,fill:true,tension:0.3},
+        {label:'Predicted NDVI',data:allNDVI,borderColor:'#ff1493',backgroundColor:'rgba(255,20,147,0.1)',pointBackgroundColor:'#ff1493',borderWidth:2,pointRadius:3,fill:true,borderDash:[5,5],tension:0.3}
       ]
     },
     options:{
@@ -255,7 +239,7 @@ function updateChart(locationName){
       plugins:{legend:{labels:{color:'white'}}},
       scales:{
         x:{ticks:{color:'white'}},
-        y:{ticks:{color:'white'}, min:0, max:1}
+        y:{ticks:{color:'white'},min:0,max:1}
       }
     }
   });
@@ -264,8 +248,8 @@ function updateChart(locationName){
 }
 
 // --- Chart Click ---
-document.getElementById('ndviChart').onclick=function(event){
-  const points=myChart.getElementsAtEventForMode(event,'nearest',{intersect:true},true);
+document.getElementById('ndviChart').onclick=function(e){
+  const points=myChart.getElementsAtEventForMode(e,'nearest',{intersect:true},true);
   if(points.length){
     const first=points[0];
     selectedDataPointIndex=first.index;
@@ -323,6 +307,5 @@ window.onload=async()=>{
   document.getElementById('get-prediction-button').addEventListener('click',getPredictionForSelectedMonth);
 }
 </script>
-
 </body>
 </html>

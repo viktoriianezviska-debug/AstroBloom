@@ -1,236 +1,574 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8"/>
-  <title>NASA Global NDVI Project</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <!-- Syne font -->
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AstroBloom: The Pulse of Life</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;700&display=swap" rel="stylesheet">
-  <!-- Tailwind CSS -->
   <script src="https://cdn.tailwindcss.com"></script>
-  <!-- Chart.js -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
-  <!-- Three.js + Globe.gl -->
-  <script src="https://unpkg.com/three@0.152.2/build/three.min.js"></script>
+  <script src="https://unpkg.com/three"></script>
   <script src="https://unpkg.com/globe.gl"></script>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIINfR7xP64jsImS44GdJqLsy7S+A8S53kU=" crossorigin=""/>
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-200l2hLgL2N4m9D5s0qf0B8Z5D3k2p2s=" crossorigin=""></script>
   <style>
-    body { font-family:'Syne',sans-serif; background:#09010C; color:#ffd1e6; }
-    canvas { background:transparent!important; }
-    #globeViz { width:100%; height:100%; min-height:420px; }
-    .glass-card { background:rgba(48,6,48,0.6); backdrop-filter:blur(6px);
-      border-radius:1.2rem; border:1.5px solid #db288e44;
-      box-shadow:0 4px 24px -6px #db288e66; }
-    .chart-title { border-left:4px solid #db288e; padding-left:.6em; font-weight:700; margin-bottom:.6em; }
-    .country-btn { background:#270022; color:#ffd1e6; border:1.5px solid #db288e44; 
-      border-radius:9999px; padding:.5em 1.2em; margin:.3em; font-weight:600; }
-    .country-btn.active, .country-btn:hover { background:#db288e; color:white; }
-    .ai-btn { background:#fff; color:#db288e; border-radius:9999px; padding:.5em 1.2em;
-      font-weight:700; transition:.2s; }
-    .ai-btn:hover { background:#db288e; color:white; }
+    :root {
+      --primary-color: #ff1493; /* Dark Pink */
+      --secondary-color: #8c0053;
+      --bg-color: #000000;
+      --text-color: #e5e7eb;
+      --card-bg: #0d0d0d;
+      --border-color: #ff1493;
+    }
+    body {
+      font-family: 'Syne', sans-serif;
+      background: var(--bg-color);
+      color: var(--text-color);
+      margin: 0;
+      overflow-x: hidden;
+    }
+    #mainContainer {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      height: 100vh;
+      width: 100vw;
+      padding: 2rem;
+      gap: 2rem;
+      box-sizing: border-box;
+    }
+    #globeViz {
+      width: 100%;
+      height: 100%;
+      background: transparent;
+      border-radius: 1rem;
+    }
+    #rightPanel {
+      overflow-y: auto;
+      padding-right: 1rem;
+    }
+    #rightPanel::-webkit-scrollbar {
+      width: 8px;
+    }
+    #rightPanel::-webkit-scrollbar-track {
+      background: var(--card-bg);
+      border-radius: 10px;
+    }
+    #rightPanel::-webkit-scrollbar-thumb {
+      background: var(--primary-color);
+      border-radius: 10px;
+    }
+    .chart-card, #ai-response-container {
+      background-color: transparent;
+      border-radius: 1rem;
+      padding: 1.5rem;
+      box-shadow: 0 0 15px rgba(255, 20, 147, 0.3);
+      border: 1px solid var(--border-color);
+    }
+    .chart-container {
+      position: relative;
+      height: 300px;
+      margin-top: 1.5rem;
+      background: transparent;
+    }
+    canvas {
+        background-color: transparent !important;
+    }
+    button, input[type="file"] {
+      background-color: var(--secondary-color);
+      color: white;
+      border: 1px solid var(--primary-color);
+      transition: background-color 0.3s ease;
+    }
+    button:hover {
+      background-color: var(--primary-color);
+    }
+    input[type="range"] { 
+      width: 60%; 
+    }
+    .file-input-label {
+      background-color: var(--secondary-color);
+      color: var(--text-color);
+      cursor: pointer;
+      border: 1px solid var(--primary-color);
+      transition: background-color 0.3s ease;
+    }
+    .file-input-label:hover {
+      background-color: var(--primary-color);
+    }
+    #country-buttons-container button {
+      background-color: var(--card-bg);
+      border: 1px solid var(--primary-color);
+      color: var(--text-color);
+    }
+    #country-buttons-container button:hover {
+      background-color: var(--primary-color);
+      color: var(--bg-color);
+    }
+    #monthSlider {
+      accent-color: var(--primary-color);
+    }
+    .loader {
+      border: 4px solid var(--card-bg);
+      border-radius: 50%;
+      border-top: 4px solid var(--primary-color);
+      width: 40px;
+      height: 40px;
+      -webkit-animation: spin 2s linear infinite;
+      animation: spin 2s linear infinite;
+    }
+    @-webkit-keyframes spin {
+      0% { -webkit-transform: rotate(0deg); }
+      100% { -webkit-transform: rotate(360deg); }
+    }
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+    .leaflet-container {
+      background-color: transparent !important;
+    }
   </style>
 </head>
-<body class="h-screen flex flex-col">
-
-<!-- Layout -->
-<div class="flex flex-1 flex-col md:flex-row">
-
-  <!-- Globe Column -->
-  <div class="flex-1 relative flex items-center justify-center p-4">
-    <div id="globeViz"></div>
-    <div id="globeControls" class="absolute top-5 left-5 glass-card px-4 py-3 text-sm">
-      <label class="mr-3"><input type="checkbox" id="ndvi-layer" checked> NDVI</label>
-      <label><input type="checkbox" id="pollinators-layer" checked> Pollinators</label>
-    </div>
-  </div>
-
-  <!-- Charts Column -->
-  <div class="flex-[1.3] flex flex-col gap-6 p-6 overflow-y-auto">
-
-    <!-- Upload + Country -->
-    <div class="glass-card p-5">
-      <h2 class="chart-title">NDVI Data Upload</h2>
-      <label class="block mb-3">
-        <span class="mr-2">Upload MODIS HDF/CSV:</span>
-        <input type="file" id="hdf-file-input" accept=".hdf,.csv" class="text-pink-200">
-      </label>
-      <span id="upload-status-message" class="text-pink-300 text-sm"></span>
-      <div id="country-buttons-container" class="mt-4 flex flex-wrap"></div>
-    </div>
-
-    <!-- NDVI Chart -->
-    <div class="glass-card p-5">
-      <div class="flex justify-between items-center mb-3">
-        <h2 class="chart-title m-0">NDVI Seasonality & Prediction</h2>
-        <button id="ai-predict-btn" class="ai-btn">AI Prediction</button>
+<body>
+  <div id="mainContainer">
+    <div id="globeContainer" class="relative">
+      <div id="globeViz"></div>
+      <div id="sliderContainer" class="absolute bottom-5 left-1/2 -translate-x-1/2 text-center text-white/90 z-10 p-4 rounded-xl" style="background: rgba(0,0,0,0.5);">
+        <span id="monthLabel" class="text-xl">January</span><br>
+        <input type="range" id="monthSlider" min="0" max="11" step="1" value="0" class="mt-2">
       </div>
-      <div class="h-64"><canvas id="ndviChart"></canvas></div>
-      <div id="ai-response-container" class="mt-3 text-pink-200 text-sm"></div>
     </div>
-
-    <!-- Data Panel -->
-    <div class="glass-card p-5">
-      <h2 class="chart-title">Bloom & Pollinator Insights</h2>
-      <div id="dataPanel"></div>
+    <div id="rightPanel">
+      <main class="space-y-8">
+        <h1 class="text-4xl font-bold text-white/90 text-center mb-8">AstroBloom: The Pulse of Life 💖</h1>
+        <div id="data-visualization-info" class="p-4 rounded-lg bg-gray-900/50">
+          <p class="text-gray-400">Click a marker on the globe or a button below to see its NDVI trend and prediction.</p>
+        </div>
+        <div class="chart-card">
+          <h2 class="text-2xl font-bold text-white/90 mb-4">Data Visualization</h2>
+          <h3 class="text-lg font-semibold text-white/90 mb-2">NDVI Trend & Prediction</h3>
+          <div id="chart-container-wrapper" class="chart-container flex justify-center items-center">
+            <canvas id="ndviChart" class="hidden"></canvas>
+            <div id="chart-status" class="text-gray-400">Loading chart...</div>
+          </div>
+        </div>
+        <div id="ai-prediction-section" class="pt-6">
+          <h3 class="text-2xl font-bold text-white/90 mb-2">AI Prediction</h3>
+          <div id="ai-response-container" class="text-gray-300 p-4 rounded-lg min-h-[5rem]">
+            AI responses will appear here. Click a data point on the chart and then click "Get AI Prediction" for more info.
+          </div>
+          <div id="selected-month-info" class="mt-4 hidden">
+            <span class="text-white font-medium">Selected Month: </span><span id="selected-month-text" class="text-pink-400"></span>
+            <button id="get-prediction-button" class="ml-4 bg-pink-600 text-white py-1 px-3 rounded-full hover:bg-pink-700">Get AI Prediction</button>
+          </div>
+        </div>
+        <div>
+          <h3 class="text-xl font-semibold text-white/90 mb-4">Select a Country</h3>
+          <div id="country-buttons-container" class="grid grid-cols-2 md:grid-cols-3 gap-3"></div>
+        </div>
+        <div class="pt-6">
+          <h3 class="text-2xl font-bold text-white/90 mb-2">Upload Data</h3>
+          <div class="flex flex-col space-y-2">
+            <label for="hdf-file-input" class="block text-gray-400 font-medium">Upload a MODIS HDF file:</label>
+            <input type="file" id="hdf-file-input" accept=".hdf" class="block w-full text-sm text-gray-500
+              file:mr-4 file:py-2 file:px-4
+              file:rounded-full file:border-0
+              file:text-sm file:font-semibold
+              file:bg-pink-50 file:text-pink-700
+              hover:file:bg-pink-100
+            ">
+            <p id="upload-status-message" class="text-sm text-gray-500 mt-2"></p>
+          </div>
+        </div>
+      </main>
     </div>
-
   </div>
-</div>
-
-<script>
-document.addEventListener('DOMContentLoaded', () => {
-
-/* -------- Data -------- */
-const locations = {
-  "Japan": { lat:36.2, lng:138.2 },
-  "Alaska": { lat:64.2, lng:-149.5 },
-  "Madagascar": { lat:-18.9, lng:47.5 },
-  "New Zealand": { lat:-40.9, lng:174.9 },
-  "Fiji": { lat:-17.7, lng:178.1 }
-};
-const monthNames = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
-
-// Bloom + Pollinators (simplified)
-const bloomData = [
-  {lat:36.2,lng:138.2,month:3,color:"#db288e",label:"Japan",species:"Cherry Blossom",note:"Peak in spring"},
-  {lat:64.2,lng:-149.5,month:6,color:"#a2cff1",label:"Alaska",species:"Arctic Lupine",note:"Short season"},
-];
-const pollinators = [
-  {lat:36.2,lng:138.5,icon:"🦋",label:"Butterfly",region:"Japan",month:[3,4,5]},
-  {lat:64.3,lng:-149.3,icon:"🐝",label:"Bee",region:"Alaska",month:[6,7]},
-];
-
-// Generate NDVI
-function genNDVI(loc, start="2019-01-01", months=48){
-  let base=0.5,f=0.2;
-  if(loc==="Japan") {base=0.45;f=0.25;}
-  if(loc==="Alaska"){base=0.2;f=0.6;}
-  const startDate=new Date(start);
-  let dates=[],vals=[];
-  for(let i=0;i<months;i++){
-    let d=new Date(startDate.getFullYear(), startDate.getMonth()+i,1);
-    let m=d.getMonth();
-    vals.push(Math.max(0,Math.min(1, base+f*Math.sin(m*Math.PI/6)+0.05*(Math.random()-0.5))));
-    dates.push(d);
-  }
-  return {dates,ndvi:vals};
-}
-const ndviDataAll={};
-for(let loc in locations) ndviDataAll[loc]=genNDVI(loc);
-let customNdvi={}, currentLocation="Japan", currentMonth=(new Date()).getMonth();
-
-/* -------- Globe -------- */
-let globeInstance;
-function initGlobe(){
-  document.getElementById('globeViz').innerHTML="";
-  globeInstance=Globe()
-    .globeImageUrl('//unpkg.com/three-globe/example/img/earth-night.jpg')
-    .backgroundColor('rgba(0,0,0,0)')
-    .pointLat('lat').pointLng('lng').pointColor(d=>d.color)
-    .pointAltitude(0.05).pointRadius(0.45)
-    .pointLabel(d=>`<b>${d.label}</b><br>${d.species}<br><span class="text-xs">${d.note}</span>`)
-    (document.getElementById('globeViz'));
-  globeInstance.controls().autoRotate=true;
-  globeInstance.controls().autoRotateSpeed=0.25;
-  updateGlobe(currentMonth);
-}
-function updateGlobe(month){
-  globeInstance.pointsData(
-    document.getElementById("ndvi-layer").checked? bloomData.filter(d=>d.month===month):[]
-  );
-}
-
-/* -------- Country Buttons -------- */
-function makeCountryBtns(){
-  const c=document.getElementById("country-buttons-container"); c.innerHTML="";
-  for(let loc in locations){
-    const b=document.createElement("button");
-    b.className="country-btn"; b.textContent=loc;
-    b.onclick=()=>setCountry(loc);
-    c.appendChild(b);
-  }
-}
-function setCountry(loc){
-  document.querySelectorAll(".country-btn").forEach(b=>b.classList.remove("active"));
-  document.querySelectorAll(".country-btn").forEach(b=>{if(b.textContent===loc)b.classList.add("active");});
-  currentLocation=loc; updateChart(loc);
-}
-
-/* -------- Chart -------- */
-let myChart;
-function updateChart(loc){
-  const {dates,ndvi}=customNdvi[loc]||ndviDataAll[loc];
-  const labels=dates.map(d=>monthNames[d.getMonth()]+" '"+d.getFullYear().toString().slice(-2));
-  if(myChart) myChart.destroy();
-  myChart=new Chart(document.getElementById("ndviChart"),{
-    type:'line', data:{labels,datasets:[
-      {label:"NDVI",data:ndvi,borderColor:"#ffd1e6",tension:0.3}
-    ]},
-    options:{responsive:true,interaction:{mode:"nearest"},
-      onClick:(e)=>{
-        const pts=myChart.getElementsAtEventForMode(e,"nearest",{intersect:true},true);
-        if(pts.length){let idx=pts[0].index; currentMonth=dates[idx].getMonth(); updateGlobe(currentMonth); updatePanel(loc,currentMonth);}
-      },
-      plugins:{legend:{labels:{color:"#ffd1e6"}}},
-      scales:{x:{ticks:{color:"#db288e"}},y:{min:0,max:1,ticks:{color:"#db288e"}}}
+  <script>
+    const monthNames = ["January","February","March","April","May","June","July","August","September","October","November","December"];
+    const bloomData = [];
+    const locations = {
+      "Japan": {"lat": 36.2048, "lon": 138.2529},
+      "Alaska": {"lat": 64.2008, "lon": -149.4937},
+      "Madagascar": {"lat": -18.7669, "lon": 46.8691},
+      "New Zealand": {"lat": -40.9006, "lon": 174.8860},
+      "Fiji": {"lat": -17.7134, "lon": 178.0650}
+    };
+    
+    // generate multiple points spread around a region
+    function addBloom(lat, lng, month, info, count=10, spread=3) {
+      for (let i=0; i<count; i++) {
+        bloomData.push({
+          lat: lat + (Math.random()-0.5)*spread,
+          lng: lng + (Math.random()-0.5)*spread,
+          month,
+          ...info   // spreads color, label, species, note
+        });
+      }
     }
-  });
-  updatePanel(loc,currentMonth);
-}
-
-/* -------- Data Panel -------- */
-function updatePanel(loc,month){
-  const {dates,ndvi}=customNdvi[loc]||ndviDataAll[loc];
-  const vals=ndvi.filter((_,i)=>dates[i].getMonth()===month);
-  const avg=vals.length?(vals.reduce((a,b)=>a+b,0)/vals.length).toFixed(2):"N/A";
-  const blooms=bloomData.filter(b=>b.label===loc&&b.month===month);
-  const pollis=pollinators.filter(p=>p.region===loc&&p.month.includes(month));
-  document.getElementById("dataPanel").innerHTML=`
-    <b class="text-pink-400">${loc} (${monthNames[month]})</b><br>
-    Avg NDVI: ${avg}<br>
-    Blooms: ${blooms.length?blooms[0].species:"None"}<br>
-    Pollinators: ${pollis.length?pollis.map(p=>p.icon+" "+p.label).join(", "):"None"}
-  `;
-}
-
-/* -------- AI Prediction -------- */
-document.getElementById("ai-predict-btn").onclick=()=>{
-  const {dates,ndvi}=customNdvi[currentLocation]||ndviDataAll[currentLocation];
-  const vals=ndvi.filter((_,i)=>dates[i].getMonth()===currentMonth);
-  const avg=vals.length?(vals.reduce((a,b)=>a+b,0)/vals.length):null;
-  let msg="No data available.";
-  if(avg!==null){
-    if(avg>0.7) msg="High vegetation activity 🌱 — peak season.";
-    else if(avg>0.4) msg="Moderate activity — crops active.";
-    else msg="Low NDVI — dormant or dry season.";
-  }
-  document.getElementById("ai-response-container").innerHTML=`<b>AI Prediction:</b> ${avg?avg.toFixed(2):"N/A"} — ${msg}`;
-};
-
-/* -------- Upload -------- */
-document.getElementById("hdf-file-input").addEventListener("change", e=>{
-  const file=e.target.files[0]; if(!file) return;
-  const msg=document.getElementById("upload-status-message"); msg.textContent="Processing...";
-  const r=new FileReader();
-  r.onload=ev=>{
-    try{
-      const text=ev.target.result.split(/\r?\n/).filter(x=>x.trim());
-      let d=[],v=[];
-      text.forEach(row=>{
-        const [date,val]=row.split(/[,\s]+/);
-        if(date&&val){d.push(new Date(date)); v.push(parseFloat(val));}
+    // --- BLOOM DATA WITH SPECIES + NOTES ---
+    // Japan (Cherry Blossom + seasonal shifts)
+    ["#e8eb49ff","#f5a2acff","#f484d4ff","#e647b9ff","#ab8aecff","#d56de3ff","#e898ecff","#f399f0ff","#de4242ff","#c27d37ff","#e16473ff","#f1ebb2ff"].forEach((color, i)=>{
+      addBloom(36.2,138.2,i,{
+        color,
+        label:"Japan",
+        species:"Cherry Blossom - Sakura",
+        note:"Cultural symbol, peak bloom in spring; critical for pollinators."
+      },15,5);
+    });
+    // Alaska (Wildflowers + tundra plants)
+    ["#83b1ddff","#649ac8ff","#a2d7ecff","#6a5acd","#8f2da0ff","#d25db9ff","#cad239ff","#d9eaa5ff","#94dee1ff","#5cabcaff","#34879eff","#4b6cb1ff"].forEach((color,i)=>{
+      addBloom(64.2,-149.5,i,{
+        color,
+        label:"Alaska",
+        species:"Lupine and Arctic Poppy",
+        note:"Short growing season; blooms support insects."
+      },12,6);
+    });
+    // Madagascar (Baobabs + tropical flowers)
+    ["#2e7d32","#4b9d4fff","#6bc56fff","#e1a2d6ff","#8be0ddff","#98d6e7ff","#8ae5e5ff","#9adbedff","#c71585","#edb232ff","#e2b330ff","#b288d1ff"].forEach((color,i)=>{
+      addBloom(-18.9,47.5,i,{
+        color,
+        label:"Madagascar",
+        species:"Baobab and Traveler's Palm",
+        note:"Unique flora; blooms influence lemur feeding and pollination."
+      },15,5);
+    });
+    // New Zealand (Kōwhai + native shrubs)
+    ["#ff1493","#ff1493","#ff8c00","#b22222","#b22222","#778899","#87ceeb","#ffb6c1","#ffff00","#e3e54eff","#cb84c9ff","#b52212ff"].forEach((color,i)=>{
+      addBloom(-40.9,174.9,i,{
+        color,
+        label:"New Zealand Bloom",
+        species:"Kōwhai and Pohutukawa",
+        note:"Seasonal shifts vital for native birds like tui and bellbirds."
+      },15,5);
+    });
+    // Fiji (Hibiscus + tropical crops)
+    ["#ebe41fff","#efa3eeff","#e28ee8ff","#ef6caeff","#ea9cd4ff","#da48c2ff","#ffffff","#ff4500","#ea8ecbff","#edaa92ff","#eea58bff","#e69a87ff"].forEach((color,i)=>{
+      addBloom(-17.7,178.1,i,{
+        color,
+        label:"Fiji",
+        species:"Hibiscus and Breadfruit",
+        note:"Blooms tied to rainfall cycles; important for pollinators and agriculture."
+      },15,5);
+    });
+    
+    // Initialize globe
+    const GlobeObj = Globe()
+      .globeImageUrl('//unpkg.com/three-globe/example/img/earth-blue-marble.jpg')
+      .pointAltitude(d => 0.02 + 0.02*Math.sin(Date.now()*0.005 + d.lat))
+      .pointRadius(0.4)
+      .pointColor(d => d.color)
+      .pointLabel(d => `<b>${d.label}</b><br><i>${d.species}</i><br>${d.note}`);
+    
+    const globeElement = document.getElementById('globeViz');
+    GlobeObj(globeElement);
+    
+    // Auto-rotate slower
+    GlobeObj.controls().autoRotate = true;
+    GlobeObj.controls().autoRotateSpeed = 0.2; // slower rotation
+    
+    // Timeline slider logic
+    const slider = document.getElementById("monthSlider");
+    const label = document.getElementById("monthLabel");
+    function updateGlobe(monthIndex) {
+      label.textContent = monthNames[monthIndex];
+      const filtered = bloomData.filter(d => d.month === monthIndex);
+      GlobeObj.pointsData(filtered);
+    }
+    updateGlobe(0);
+    slider.addEventListener("input", e => {
+      updateGlobe(parseInt(e.target.value));
+    });
+    
+    // Pulsing animation
+    (function animate() {
+      GlobeObj.pointAltitude(d => 0.02 + 0.02*Math.sin(Date.now()*0.005 + d.lat));
+      requestAnimationFrame(animate);
+    })();
+    
+    // Chart and AI logic
+    let currentLocation = 'Japan';
+    let myChart;
+    let selectedDataPointIndex = null;
+    let fetchedNDVIData = {};
+    
+    function generateNDVIDataForLocation(locationName, startDate, numMonths) {
+      const dates = [];
+      const ndvi = [];
+      const start = new Date(startDate);
+      let seasonalFactor, baseValue;
+      switch(locationName) {
+        case "Japan":
+          baseValue = 0.45;
+          seasonalFactor = 0.25;
+          break;
+        case "Alaska":
+          baseValue = 0.2;
+          seasonalFactor = 0.6;
+          break;
+        case "Madagascar":
+          baseValue = 0.7;
+          seasonalFactor = 0.08;
+          break;
+        case "New Zealand":
+          baseValue = 0.5;
+          seasonalFactor = 0.2;
+          break;
+        case "Fiji":
+          baseValue = 0.8;
+          seasonalFactor = 0.05;
+          break;
+        default:
+          baseValue = 0.5;
+          seasonalFactor = 0.2;
+      }
+      for (let i = 0; i < numMonths; i++) {
+        const date = new Date(start.getFullYear(), start.getMonth() + i, 1);
+        dates.push(date);
+        let month = date.getMonth();
+        if (locationName === "New Zealand") {
+          month = (month + 6) % 12;
+        }
+        const value = baseValue + seasonalFactor * Math.sin(month * (Math.PI / 6)) + 0.03 * (Math.random() - 0.5);
+        ndvi.push(Math.max(0, Math.min(1, value)));
+      }
+      return { dates, ndvi };
+    }
+    
+    async function fetchDataAndLoad() {
+      const ndviData = {};
+      const numMonths = 60; // 5 years of data
+      for (const loc in locations) {
+        ndviData[loc] = generateNDVIDataForLocation(loc, '2018-01-01', numMonths);
+      }
+      return ndviData;
+    }
+    
+    function updateChart(locationName) {
+      currentLocation = locationName;
+      const chartData = fetchedNDVIData[locationName];
+      if (!chartData) return;
+      document.getElementById('ndviChart').classList.remove('hidden');
+      document.getElementById('chart-status').style.display = 'none';
+      const monthlyAverages = new Array(12).fill(0);
+      const monthlyCounts = new Array(12).fill(0);
+      chartData.dates.forEach((date, i) => {
+        const month = date.getMonth();
+        monthlyAverages[month] += chartData.ndvi[i];
+        monthlyCounts[month]++;
       });
-      customNdvi[currentLocation]={dates:d,ndvi:v};
-      updateChart(currentLocation);
-      msg.textContent="Upload successful!";
-    }catch{msg.textContent="Error parsing file.";}
-  };
-  r.readAsText(file);
-});
-
-/* -------- Init -------- */
-makeCountryBtns(); setCountry(currentLocation); initGlobe();
-
-});
-</script>
+      const seasonalPattern = monthlyAverages.map((sum, month) => sum / monthlyCounts[month]);
+      const xMonths = Array.from({ length: chartData.dates.length }, (_, i) => i);
+      let sumX = 0, sumY = 0, sumXY = 0, sumX2 = 0;
+      const n = xMonths.length;
+      for (let i = 0; i < n; i++) {
+        sumX += xMonths[i];
+        sumY += chartData.ndvi[i];
+        sumXY += xMonths[i] * chartData.ndvi[i];
+        sumX2 += xMonths[i] * xMonths[i];
+      }
+      const m = (n * sumXY - sumX * sumY) / (n * sumX2 - sumX * sumX);
+      const futureDates = [];
+      const predictedNDVI = [];
+      const lastMonth = chartData.dates[chartData.dates.length - 1];
+      for (let i = 1; i <= 12; i++) {
+        const futureDate = new Date(lastMonth.getFullYear(), lastMonth.getMonth() + i, 1);
+        const futureMonthIndex = futureDate.getMonth();
+        const futureMonthTotalIndex = chartData.dates.length + i - 1;
+        const prediction = seasonalPattern[futureMonthIndex] + (m * futureMonthTotalIndex);
+        predictedNDVI.push(Math.max(0, Math.min(1, prediction)));
+        futureDates.push(futureDate);
+      }
+      const allDates = chartData.dates.concat(futureDates);
+      const allNDVI = chartData.ndvi.concat(predictedNDVI);
+      const lastHistoricalIndex = chartData.dates.length - 1;
+      const ctx = document.getElementById('ndviChart').getContext('2d');
+      
+      if (myChart) {
+        myChart.destroy();
+      }
+      myChart = new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels: allDates.map(d => d.toLocaleString('default', { month: 'short', year: 'numeric' })),
+          datasets: [
+            {
+              label: 'Historical NDVI',
+              data: chartData.ndvi,
+              borderColor: '#ff1493',
+              backgroundColor: 'rgba(255, 20, 147, 0.2)',
+              pointBackgroundColor: '#ff1493',
+              borderWidth: 2,
+              pointRadius: 3,
+              fill: false,
+              tension: 0.4
+            },
+            {
+              label: 'Predicted NDVI',
+              data: allNDVI,
+              borderColor: '#e28ee8ff',
+              backgroundColor: 'rgba(226, 142, 232, 0.2)',
+              pointBackgroundColor: '#e28ee8ff',
+              borderWidth: 2,
+              pointRadius: 3,
+              fill: false,
+              borderDash: [5, 5],
+              tension: 0.4,
+              pointStyle: (context) => {
+                const index = context.dataIndex;
+                if (index <= lastHistoricalIndex) {
+                  return 'circle';
+                } else {
+                  return 'star';
+                }
+              }
+            }
+          ]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          scales: {
+            x: {
+              title: {
+                display: true,
+                text: 'Date',
+                color: '#9ca3af'
+              },
+              ticks: {
+                color: '#9ca3af',
+                autoSkip: true,
+                maxTicksLimit: 12
+              },
+              grid: {
+                color: 'rgba(156, 163, 175, 0.1)'
+              }
+            },
+            y: {
+              title: {
+                display: true,
+                text: 'NDVI (Vegetation Index)',
+                color: '#9ca3af'
+              },
+              min: 0,
+              max: 1,
+              ticks: {
+                color: '#9ca3af'
+              },
+              grid: {
+                color: 'rgba(156, 163, 175, 0.1)'
+              }
+            }
+          },
+          plugins: {
+            legend: {
+              labels: {
+                color: '#e5e7eb'
+              }
+            },
+            tooltip: {
+              backgroundColor: 'rgba(31, 41, 55, 0.8)',
+              titleColor: '#e5e7eb',
+              bodyColor: '#9ca3af'
+            }
+          },
+          onClick: handleChartClick
+        }
+      });
+      const infoPanel = document.getElementById('data-visualization-info');
+      infoPanel.innerHTML = `
+        <h3 class="text-xl font-semibold text-white/90 mb-2">${locationName}</h3>
+        <p class="text-gray-400">Click on a data point to get an AI prediction for that month.</p>
+      `;
+      const selectedMonthInfo = document.getElementById('selected-month-info');
+      selectedMonthInfo.classList.add('hidden');
+    }
+    
+    function handleChartClick(event) {
+      const points = myChart.getElementsAtEventForMode(event, 'nearest', { intersect: true }, true);
+      if (points.length) {
+        const firstPoint = points[0];
+        const label = myChart.data.labels[firstPoint.index];
+        selectedDataPointIndex = firstPoint.index;
+        const selectedMonthInfo = document.getElementById('selected-month-info');
+        const selectedMonthText = document.getElementById('selected-month-text');
+        selectedMonthText.textContent = label;
+        selectedMonthInfo.classList.remove('hidden');
+      }
+    }
+    
+    function getPredictionForSelectedMonth() {
+      if (selectedDataPointIndex === null) {
+        document.getElementById('ai-response-container').textContent = "Please select a month on the chart first.";
+        return;
+      }
+      const selectedMonth = myChart.data.labels[selectedDataPointIndex];
+      const selectedValue = myChart.data.datasets[0].data[selectedDataPointIndex];
+      const aiResponseContainer = document.getElementById('ai-response-container');
+      aiResponseContainer.innerHTML = `<div class="loader mx-auto"></div> <span class="block text-center mt-2 text-gray-400">Thinking...</span>`;
+      setTimeout(() => {
+        const location = currentLocation;
+        let response = "";
+        if (myChart.data.datasets[1].data[selectedDataPointIndex] !== undefined) {
+          const predictedValue = myChart.data.datasets[1].data[selectedDataPointIndex];
+          response = `For ${location}, the AI predicts a Normalized Difference Vegetation Index (NDVI) of approximately ${predictedValue.toFixed(2)} in ${selectedMonth}. This is a predicted value based on an analysis of past trends and seasonal cycles.`;
+        } else {
+          response = `For ${selectedMonth} in ${location}, the historical NDVI value was approximately ${selectedValue.toFixed(2)}. This value is a historical measurement from our satellite data.`;
+        }
+        aiResponseContainer.innerHTML = response;
+      }, 1500);
+    }
+    
+    function createCountryButtons() {
+      const buttonContainer = document.getElementById('country-buttons-container');
+      const locationsArray = Object.keys(locations);
+      locationsArray.forEach(loc => {
+        const button = document.createElement('button');
+        button.textContent = loc;
+        button.className = 'bg-gray-800 text-gray-300 py-2 px-4 rounded-full transition-colors duration-200 hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-pink-500 focus:ring-opacity-50';
+        button.addEventListener('click', () => {
+          updateChart(loc);
+        });
+        buttonContainer.appendChild(button);
+      });
+    }
+    
+    window.onload = async () => {
+      const chartStatus = document.getElementById('chart-status');
+      const hdfFileInput = document.getElementById('hdf-file-input');
+      const uploadStatusMessage = document.getElementById('upload-status-message');
+      const getPredictionButton = document.getElementById('get-prediction-button');
+      
+      try {
+        chartStatus.textContent = "Fetching data...";
+        fetchedNDVIData = await fetchDataAndLoad();
+        chartStatus.textContent = "Data loaded.";
+      } catch (error) {
+        chartStatus.textContent = "Failed to load data. Please check the console for errors.";
+        console.error("Initialization error:", error);
+      }
+      
+      createCountryButtons();
+      updateChart('Japan');
+      
+      if (getPredictionButton) {
+        getPredictionButton.addEventListener('click', getPredictionForSelectedMonth);
+      }
+      
+      hdfFileInput.addEventListener('change', (event) => {
+        if (event.target.files.length > 0) {
+          uploadStatusMessage.className = 'text-sm text-yellow-400 mt-2';
+          uploadStatusMessage.textContent = 'Processing file...';
+          setTimeout(() => {
+            uploadStatusMessage.className = 'text-sm text-green-400 mt-2';
+            uploadStatusMessage.textContent = 'File uploaded successfully. Simulating data visualization. Please select a location to see the updated chart.';
+            updateChart(currentLocation);
+          }, 2000);
+        }
+      });
+    };
+  </script>
 </body>
 </html>

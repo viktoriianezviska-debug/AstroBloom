@@ -7,8 +7,7 @@
   <style>
     body { 
       margin: 0; 
-      background: transparent; 
-      font-family: 'Syne', sans-serif; 
+      background: transparent; /* removed black background */
       overflow: hidden;
     }
     #globeViz { 
@@ -22,6 +21,8 @@
       text-align: center;
       color: white;
       font-size: 1.2em;
+      z-index: 10; /* ensures slider is above globe */
+      pointer-events: auto;
     }
     input[type="range"] { 
       width: 60%; 
@@ -53,74 +54,44 @@
 
     const bloomData = [];
 
-    // generate multiple points spread around a region
     function addBloom(lat, lng, month, info, count=10, spread=3) {
       for (let i=0; i<count; i++) {
         bloomData.push({
           lat: lat + (Math.random()-0.5)*spread,
           lng: lng + (Math.random()-0.5)*spread,
           month,
-          ...info   // spreads color, label, species, note
+          ...info
         });
       }
     }
 
     // --- BLOOM DATA WITH SPECIES + NOTES ---
-
-    // Japan (Cherry Blossom + seasonal shifts)
     ["#e8eb49ff","#f5a2acff","#f484d4ff","#e647b9ff","#ab8aecff","#d56de3ff","#e898ecff","#f399f0ff","#de4242ff","#c27d37ff","#e16473ff","#f1ebb2ff"].forEach((color, i)=>{
-      addBloom(36.2,138.2,i,{
-        color,
-        label:"Japan",
-        species:"Cherry Blossom - Sakura",
-        note:"Cultural symbol, peak bloom in spring; critical for pollinators."
-      },15,5);
+      addBloom(36.2,138.2,i,{color,label:"Japan",species:"Cherry Blossom - Sakura",note:"Cultural symbol, peak bloom in spring; critical for pollinators."},15,5);
     });
 
-    // Alaska (Wildflowers + tundra plants)
     ["#83b1ddff","#649ac8ff","#a2d7ecff","#6a5acd","#8f2da0ff","#d25db9ff","#cad239ff","#d9eaa5ff","#94dee1ff","#5cabcaff","#34879eff","#4b6cb1ff"].forEach((color,i)=>{
-      addBloom(64.2,-149.5,i,{
-        color,
-        label:"Alaska",
-        species:"Lupine and Arctic Poppy",
-        note:"Short growing season; blooms support insects."
-      },12,6);
+      addBloom(64.2,-149.5,i,{color,label:"Alaska",species:"Lupine and Arctic Poppy",note:"Short growing season; blooms support insects."},12,6);
     });
 
-    // Madagascar (Baobabs + tropical flowers)
     ["#2e7d32","#4b9d4fff","#6bc56fff","#e1a2d6ff","#8be0ddff","#98d6e7ff","#8ae5e5ff","#9adbedff","#c71585","#edb232ff","#e2b330ff","#b288d1ff"].forEach((color,i)=>{
-      addBloom(-18.9,47.5,i,{
-        color,
-        label:"Madagascar",
-        species:"Baobab and Traveler's Palm",
-        note:"Unique flora; blooms influence lemur feeding and pollination."
-      },15,5);
+      addBloom(-18.9,47.5,i,{color,label:"Madagascar",species:"Baobab and Traveler's Palm",note:"Unique flora; blooms influence lemur feeding and pollination."},15,5);
     });
 
-    // New Zealand (Kōwhai + native shrubs)
     ["#ff1493","#ff1493","#ff8c00","#b22222","#b22222","#778899","#87ceeb","#ffb6c1","#ffff00","#e3e54eff","#cb84c9ff","#b52212ff"].forEach((color,i)=>{
-      addBloom(-40.9,174.9,i,{
-        color,
-        label:"New Zealand Bloom",
-        species:"Kōwhai and Pohutukawa",
-        note:"Seasonal shifts vital for native birds like tui and bellbirds."
-      },15,5);
+      addBloom(-40.9,174.9,i,{color,label:"New Zealand Bloom",species:"Kōwhai and Pohutukawa",note:"Seasonal shifts vital for native birds like tui and bellbirds."},15,5);
     });
 
-    // Fiji (Hibiscus + tropical crops)
     ["#ebe41fff","#efa3eeff","#e28ee8ff","#ef6caeff","#ea9cd4ff","#da48c2ff","#ffffff","#ff4500","#ea8ecbff","#edaa92ff","#eea58bff","#e69a87ff"].forEach((color,i)=>{
-      addBloom(-17.7,178.1,i,{
-        color,
-        label:"Fiji",
-        species:"Hibiscus and Breadfruit",
-        note:"Blooms tied to rainfall cycles; important for pollinators and agriculture."
-      },15,5);
+      addBloom(-17.7,178.1,i,{color,label:"Fiji",species:"Hibiscus and Breadfruit",note:"Blooms tied to rainfall cycles; important for pollinators and agriculture."},15,5);
     });
 
     // Initialize globe
     const GlobeObj = Globe()
       .globeImageUrl('//unpkg.com/three-globe/example/img/earth-blue-marble.jpg')
-      .pointAltitude(d => 0.02 + 0.02*Math.sin(Date.now()*0.005 + d.lat))
+      .width(window.innerWidth)
+      .height(window.innerHeight)
+      .pointAltitude(d => 0.02 + 0.02 * Math.sin(Date.now() * 0.005 + d.lat))
       .pointRadius(0.4)
       .pointColor(d => d.color)
       .pointLabel(d => `
@@ -129,12 +100,23 @@
         ${d.note}
       `);
 
+    // High-quality rendering
+    GlobeObj.renderer().setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    GlobeObj.renderer().antialias = true;
+
+    // Add to DOM
     const globeElement = document.getElementById('globeViz');
     GlobeObj(globeElement);
 
-    // Auto-rotate slower
+    // Auto-rotate
     GlobeObj.controls().autoRotate = true;
-    GlobeObj.controls().autoRotateSpeed = 0.2; // slower rotation
+    GlobeObj.controls().autoRotateSpeed = 0.2;
+
+    // Update on resize
+    window.addEventListener('resize', () => {
+      GlobeObj.width(window.innerWidth);
+      GlobeObj.height(window.innerHeight);
+    });
 
     // Timeline slider logic
     const slider = document.getElementById("monthSlider");
@@ -154,11 +136,11 @@
 
     // Pulsing animation
     (function animate() {
-      GlobeObj.pointAltitude(d => 0.02 + 0.02*Math.sin(Date.now()*0.005 + d.lat));
+      GlobeObj.pointAltitude(d => 0.02 + 0.02 * Math.sin(Date.now() * 0.005 + d.lat));
       requestAnimationFrame(animate);
     })();
 
-    // --- Play Button Logic ---
+    // Play Button Logic
     let isPlaying = false;
     let playInterval;
     const playBtn = document.getElementById("playBtn");
@@ -171,7 +153,7 @@
           let nextMonth = (parseInt(slider.value) + 1) % 12;
           slider.value = nextMonth;
           updateGlobe(nextMonth);
-        }, 1000); // 1 second per month
+        }, 1000);
       } else {
         isPlaying = false;
         playBtn.textContent = "▶ Play";

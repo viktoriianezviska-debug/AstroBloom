@@ -1,501 +1,344 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Astrobloom Interactive Globe</title>
-  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;700&display=swap" rel="stylesheet">
-  <script src="https://cdn.tailwindcss.com"></script>
-  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
-  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIINfR7xP64jsImS44GdJqLsy7S+A8S53kU=" crossorigin=""/>
-  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-200l2hLgL2N4m9D5s0qf0B8Z5D3k2p2s=" crossorigin=""></script>
-  <style>
-    body {
-      margin: 0;
-      background: black;
-      font-family: 'Syne', sans-serif;
-      overflow: hidden;
-      color: #e5e7eb;
-    }
-    #mainContainer {
-      position: relative;
-      width: 100vw;
-      height: 100vh;
-    }
-    #globeViz {
-      position: absolute;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      z-index: 0;
-      cursor: grab;
-    }
-    /* transparent canvas behind the globe */
-    #globeViz canvas {
-      background: transparent !important;
-    }
-    #dataVizContainer {
-      position: absolute;
-      top: 50%;
-      left: 5%;
-      transform: translateY(-50%);
-      width: 30vw;
-      max-height: 80vh;
-      overflow-y: auto;
-      z-index: 2;
-      background: rgba(10,10,10,0.85);
-      border-radius: 1rem;
-      padding: 1.5rem;
-    }
-    #sliderContainer {
-      position: absolute;
-      bottom: 20px;
-      left: 20px;
-      width: 40%;
-      text-align: center;
-      color: white;
-      font-size: 1.2em;
-      background: rgba(0, 0, 0, 0.5);
-      padding: 10px;
-      border-radius: 10px;
-      z-index: 3;
-    }
-    input[type="range"] {
-      width: 80%;
-      -webkit-appearance: none;
-      height: 8px;
-      background: #d84594;
-      outline: none;
-      border-radius: 5px;
-      margin-top: 10px;
-    }
-    input[type="range"]::-webkit-slider-thumb {
-      -webkit-appearance: none;
-      appearance: none;
-      width: 20px;
-      height: 20px;
-      background: #ffc0cb;
-      cursor: pointer;
-      border-radius: 50%;
-    }
-    #playBtn {
-      margin-top: 10px;
-      padding: 8px 16px;
-      font-size: 1em;
-      cursor: pointer;
-      border-radius: 8px;
-      border: none;
-      background: #d84594;
-      color: white;
-    }
-    #map {
-      height: 200px;
-      border-radius: 1rem;
-      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-      transition: all 0.3s ease-in-out;
-      margin-bottom: 1rem;
-    }
-    .chart-card {
-      background-color: rgba(13,13,13,0.8);
-      border-radius: 1rem;
-      padding: 1rem;
-      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
-    }
-    .chart-container {
-      position: relative;
-      height: 300px;
-      margin-top: 1rem;
-    }
-    .loader {
-      border: 4px solid #333;
-      border-top: 4px solid #d84594;
-      border-radius: 50%;
-      width: 30px;
-      height: 30px;
-      animation: spin 1s linear infinite;
-    }
-    @keyframes spin {
-      0% { transform: rotate(0deg); }
-      100% { transform: rotate(360deg); }
-    }
-    h1, h3 {
-      color: #ffc0cb;
-    }
-    .text-gray-400 {
-      color: #999 !important;
-    }
-  </style>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Interactive NDVI Globe & Chart</title>
+
+<!-- Syne font -->
+<link href="https://fonts.googleapis.com/css2?family=Syne&display=swap" rel="stylesheet" />
+
+<style>
+  /* Reset and base */
+  body, html {
+    margin: 0; padding: 0; height: 100vh; overflow: hidden;
+    background: #000000;
+    color: #ff1493; /* dark pink */
+    font-family: 'Syne', sans-serif;
+    display: flex;
+    flex-direction: row;
+  }
+  #globeViz {
+    flex: 1;
+    position: relative;
+  }
+  #chartContainer {
+    flex: 1;
+    padding: 20px;
+    background: rgba(255, 20, 147, 0.1); /* transparent dark pink */
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+  }
+  canvas {
+    background: transparent !important;
+  }
+  h2 {
+    margin: 0 0 10px 0;
+    color: #ff69b4; /* lighter pink */
+  }
+  #countryName {
+    font-weight: 700;
+    font-size: 1.5em;
+    margin-bottom: 15px;
+  }
+  /* Tooltip style for globe */
+  #tooltip {
+    position: absolute;
+    background: rgba(255, 20, 147, 0.85);
+    color: white;
+    padding: 5px 10px;
+    border-radius: 4px;
+    pointer-events: none;
+    font-size: 14px;
+    font-weight: 600;
+    opacity: 0;
+    transition: opacity 0.2s ease;
+  }
+</style>
+
 </head>
 <body>
-  <div id="mainContainer">
-    <div id="globeViz"></div>
-    <div id="dataVizContainer">
-      <h1 class="text-4xl font-bold mb-4">AstroBloom: The Pulse of Life</h1>
-      <div id="data-visualization-info" class="text-gray-400 mb-4">
-        <p>Click a marker on the map or select a location below to view the NDVI trend & forecast.</p>
-      </div>
-      <div id="map"></div>
-      <div class="chart-card">
-        <h3 class="text-lg font-semibold mb-2">NDVI Trend & Prediction</h3>
-        <div id="chart-container-wrapper" class="chart-container flex justify-center items-center">
-          <canvas id="ndviChart" class="hidden"></canvas>
-          <div id="chart-status" class="text-gray-400">Loading chart...</div>
-        </div>
-      </div>
-      <div id="ai-prediction-section" class="pt-6">
-        <h3 class="text-2xl font-bold mb-2">AI Prediction</h3>
-        <div id="ai-response-container" class="bg-black text-gray-300 p-4 rounded-lg shadow-inner min-h-[5rem]">
-          AI responses will appear here. Click a data point on the chart, then click “Get AI Prediction.”
-        </div>
-        <div id="selected-month-info" class="mt-4 hidden">
-          <span class="text-white font-medium">Selected Month: </span>
-          <span id="selected-month-text" class="text-[#ffc0cb]"></span>
-          <button id="get-prediction-button"
-                  class="ml-4 bg-[#d84594] text-white py-1 px-3 rounded-full hover:bg-[#ffc0cb] hover:text-black transition-colors">
-            Get AI Prediction
-          </button>
-        </div>
-      </div>
-      <div class="pt-6">
-        <h3 class="text-xl font-semibold mb-4">Select a Country</h3>
-        <div id="country-buttons-container" class="grid grid-cols-2 md:grid-cols-3 gap-3"></div>
-      </div>
-      <div class="pt-6">
-        <h3 class="text-2xl font-bold mb-2">Upload Data</h3>
-        <div class="flex flex-col space-y-2">
-          <label for="hdf-file-input" class="block text-gray-400 font-medium">Upload a MODIS HDF file:</label>
-          <input type="file" id="hdf-file-input" accept=".hdf"
-                 class="block w-full text-sm text-gray-500
-                        file:mr-4 file:py-2 file:px-4
-                        file:rounded-full file:border-0
-                        file:text-sm file:font-semibold
-                        file:bg-[#d84594] file:text-white
-                        hover:file:bg-[#ffc0cb] hover:file:text-black transition-colors">
-          <p id="upload-status-message" class="text-sm text-gray-500 mt-2"></p>
-        </div>
-      </div>
-    </div>
-  </div>
 
-  <div id="sliderContainer">
-    <span id="monthLabel">January</span><br>
-    <input type="range" id="monthSlider" min="0" max="11" step="1" value="0"><br>
-    <button id="playBtn">▶ Play</button>
-  </div>
+<div id="globeViz"></div>
 
-  <script src="https://unpkg.com/three"></script>
-  <script src="https://unpkg.com/globe.gl"></script>
+<div id="chartContainer">
+  <div id="countryName">Select a country</div>
+  <canvas id="ndviChart"></canvas>
+</div>
 
-  <script>
-    // -----------------------------------------------------
-    // Utility: load NDVI + prediction data (dummy for now)
-    // -----------------------------------------------------
-    // Replace this with actual load from JSON or server
-    function loadNDVI() {
-      // returns an object: { locationName: { dates: [Date, ...], ndvi: [...], predicted: [...] } }
-      const out = {};
-      const locations = ["Japan","Alaska","Madagascar","New Zealand","Fiji"];
-      locations.forEach(loc => {
-        const n = 60;
-        const dates = [];
-        const ndvi = [];
-        for (let i = 0; i < n; i++) {
-          const d = new Date(2018, i, 1);
-          dates.push(d);
-          ndvi.push(0.4 + 0.3 * Math.sin(i * Math.PI / 6) + 0.05 * (Math.random() - 0.5));
-        }
-        const predicted = [];
-        for (let i = n; i < n + 12; i++) {
-          predicted.push(0.4 + 0.3 * Math.sin(i * Math.PI / 6));
-        }
-        out[loc] = { dates, ndvi, predicted };
-      });
-      return out;
+<div id="tooltip"></div>
+
+<!-- Three.js + Globe.gl -->
+<script src="https://unpkg.com/three@0.148.0/build/three.min.js"></script>
+<script src="https://unpkg.com/three-globe@2.25.2/dist/three-globe.min.js"></script>
+<script src="https://unpkg.com/d3@7"></script>
+
+<!-- Chart.js -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<script>
+  // ==== Your NDVI data and predictions converted from Python ====
+
+  // Data format example: 
+  // For each country, an array of objects {date: "YYYY-MM-DD", ndvi: value}
+  // Past data + predicted data concatenated
+
+  // Example locations with lat/lon and data:
+  const locations = {
+    "Japan": { lat: 36.2048, lon: 138.2529 },
+    "Alaska": { lat: 64.2008, lon: -149.4937 },
+    "Madagascar": { lat: -18.7669, lon: 46.8691 },
+    "New Zealand": { lat: -40.9006, lon: 174.8860 },
+    "Fiji": { lat: -17.7134, lon: 178.0650 }
+  };
+
+  // Simulated combined historical + predicted NDVI data for each location
+  // NOTE: Replace this with your real data converted to JSON from Python
+  const ndviData = {
+    "Japan": generateSampleNDVI(60, 12, 0.6, 0.3),
+    "Alaska": generateSampleNDVI(60, 12, 0.5, 0.2),
+    "Madagascar": generateSampleNDVI(60, 12, 0.7, 0.25),
+    "New Zealand": generateSampleNDVI(60, 12, 0.55, 0.3),
+    "Fiji": generateSampleNDVI(60, 12, 0.6, 0.35)
+  };
+
+  // Helper function to generate synthetic NDVI data for demo (past + future)
+  function generateSampleNDVI(pastMonths=60, futureMonths=12, base=0.5, amplitude=0.3){
+    let data = [];
+    let startDate = new Date(2018, 0, 1); // Jan 2018
+    for(let i=0; i < pastMonths + futureMonths; i++){
+      let date = new Date(startDate.getFullYear(), startDate.getMonth() + i, 1);
+      let val = base + amplitude * Math.sin((2 * Math.PI * i) / 12) + 0.05 * (Math.random() - 0.5);
+      val = Math.min(Math.max(val, 0), 1);
+      data.push({date: date.toISOString().substring(0,10), ndvi: val});
     }
+    return data;
+  }
 
-    // -----------------------------------------------------
-    // Globe & Bloom data
-    // -----------------------------------------------------
-    const monthNames = ["January","February","March","April","May","June","July","August","September","October","November","December"];
-    const bloomData = [];
-    function addBloom(lat, lng, month, info, count = 10, spread = 3) {
-      for (let i = 0; i < count; i++) {
-        bloomData.push({
-          lat: lat + (Math.random() - 0.5) * spread,
-          lng: lng + (Math.random() - 0.5) * spread,
-          month,
-          ...info
-        });
+  // === Globe Setup ===
+
+  const Globe = new ThreeGlobe({
+    waitForGlobeReady: true,
+    showAtmosphere: false,
+    backgroundColor: null,
+    globeGlowCoefficient: 0.2,
+  })
+  .globeImageUrl('//unpkg.com/three-globe/example/img/earth-dark.jpg') // dark textured globe
+  .polygonsData([]) // we'll add countries later
+  .polygonCapColor(() => 'rgba(255,20,147,0.4)')
+  .polygonSideColor(() => 'rgba(255,20,147,0.05)')
+  .polygonStrokeColor(() => '#ff1493')
+  .polygonAltitude(0.06);
+
+  const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+  renderer.setSize(window.innerWidth * 0.5, window.innerHeight);
+  renderer.setClearColor(0x000000, 0); // transparent background
+
+  const scene = new THREE.Scene();
+  const camera = new THREE.PerspectiveCamera();
+  camera.aspect = window.innerWidth / window.innerHeight;
+  camera.updateProjectionMatrix();
+  camera.position.z = 400;
+
+  scene.add(Globe);
+  scene.add(new THREE.AmbientLight(0xffffff));
+
+  const globeDiv = document.getElementById('globeViz');
+  globeDiv.appendChild(renderer.domElement);
+
+  // Load GeoJSON for countries - Using naturalearth data (simplified)
+  fetch('https://cdn.jsdelivr.net/npm/world-atlas@2/countries-110m.json')
+    .then(res => res.json())
+    .then(data => {
+      // Convert topojson to geojson
+      const countries = topojson.feature(data, data.objects.countries).features;
+      Globe.polygonsData(countries);
+      Globe.polygonLabel(({ properties: d }) => d.ADMIN);
+      Globe.polygonsTransitionDuration(300);
+
+      renderer.render(scene, camera);
+    });
+
+  // Resize handling
+  window.addEventListener('resize', () => {
+    renderer.setSize(window.innerWidth * 0.5, window.innerHeight);
+    camera.aspect = (window.innerWidth * 0.5) / window.innerHeight;
+    camera.updateProjectionMatrix();
+  });
+
+  // Animate globe rotation
+  let rotationSpeed = 0.0015;
+  function animate(){
+    Globe.rotation.y += rotationSpeed;
+    renderer.render(scene, camera);
+    requestAnimationFrame(animate);
+  }
+  animate();
+
+  // === Interaction and Tooltip ===
+
+  const tooltip = document.getElementById('tooltip');
+
+  // Raycaster for hover & clicks
+  const raycaster = new THREE.Raycaster();
+  const mouse = new THREE.Vector2();
+
+  renderer.domElement.addEventListener('mousemove', event => {
+    const rect = renderer.domElement.getBoundingClientRect();
+    mouse.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
+    mouse.y = - ((event.clientY - rect.top) / rect.height) * 2 + 1;
+
+    raycaster.setFromCamera(mouse, camera);
+    const intersects = raycaster.intersectObjects(Globe.polygonsMeshes);
+
+    if(intersects.length > 0){
+      const country = intersects[0].object;
+      const props = country?.userData?.feature?.properties;
+      if(props){
+        tooltip.style.opacity = 1;
+        tooltip.style.left = event.clientX + 10 + 'px';
+        tooltip.style.top = event.clientY + 10 + 'px';
+        tooltip.textContent = props.ADMIN;
       }
+    } else {
+      tooltip.style.opacity = 0;
     }
-    ["#e8eb49ff","#f5a2acff","#f484d4ff","#e647b9ff","#ab8aecff","#d56de3ff","#e898ecff","#f399f0ff","#de4242ff","#c27d37ff","#e16473ff","#f1ebb2ff"].forEach((color, i) => {
-      addBloom(36.2, 138.2, i, { color, label: "Japan", species: "Cherry Blossom - Sakura", note: "Peak bloom in spring" }, 15, 5);
-    });
-    ["#83b1ddff","#649ac8ff","#a2d7ecff","#6a5acd","#8f2da0ff","#d25db9ff","#cad239ff","#d9eaa5ff","#94dee1ff","#5cabcaff","#34879eff","#4b6cb1ff"].forEach((color, i) => {
-      addBloom(64.2, -149.5, i, { color, label: "Alaska", species: "Lupine & Arctic Poppy", note: "Short growing season" }, 12, 6);
-    });
-    ["#2e7d32","#4b9d4fff","#6bc56fff","#e1a2d6ff","#8be0ddff","#98d6e7ff","#8ae5e5ff","#9adbedff","#c71585","#edb232ff","#e2b330ff","#b288d1ff"].forEach((color, i) => {
-      addBloom(-18.9, 47.5, i, { color, label: "Madagascar", species: "Baobab & Traveler's Palm", note: "Flora diversity" }, 15, 5);
-    });
-    ["#ff1493","#ff1493","#ff8c00","#b22222","#b22222","#778899","#87ceeb","#ffb6c1","#ffff00","#e3e54eff","#cb84c9ff","#b52212ff"].forEach((color, i) => {
-      addBloom(-40.9, 174.9, i, { color, label: "New Zealand", species: "Kōwhai & Pohutukawa", note: "Seasonal shifts" }, 15, 5);
-    });
-    ["#ebe41fff","#efa3eeff","#e28ee8ff","#ef6caeff","#ea9cd4ff","#da48c2ff","#ffffff","#ff4500","#ea8ecbff","#edaa92ff","#eea58bff","#e69a87ff"].forEach((color, i) => {
-      addBloom(-17.7, 178.1, i, { color, label: "Fiji", species: "Hibiscus & Breadfruit", note: "Rainfall tied blooms" }, 15, 5);
-    });
+  });
 
-    const GlobeObj = Globe({
-      rendererConfig: { alpha: true, antialias: true }
-    })
-      .globeImageUrl('//unpkg.com/three-globe/example/img/earth-blue-marble.jpg')
-      .backgroundColor(null)
-      .pointAltitude(d => 0.02 + 0.02 * Math.sin(Date.now() * 0.005 + d.lat))
-      .pointRadius(0.4)
-      .pointColor(d => d.color)
-      .pointLabel(d => `<b>${d.label}</b><br><i>${d.species}</i><br>${d.note}`);
+  // === Chart Setup ===
 
-    const globeElement = document.getElementById('globeViz');
-    GlobeObj(globeElement);
-    GlobeObj.controls().autoRotate = true;
-    GlobeObj.controls().autoRotateSpeed = 0.2;
+  const ctx = document.getElementById('ndviChart').getContext('2d');
 
-    const slider = document.getElementById("monthSlider");
-    const label = document.getElementById("monthLabel");
-    function updateGlobe(monthIndex) {
-      label.textContent = monthNames[monthIndex];
-      const filtered = bloomData.filter(d => d.month === monthIndex);
-      GlobeObj.pointsData(filtered);
-    }
-    updateGlobe(0);
-    slider.addEventListener("input", e => {
-      updateGlobe(parseInt(e.target.value));
-    });
-    (function animate() {
-      GlobeObj.pointAltitude(d => 0.02 + 0.02 * Math.sin(Date.now() * 0.005 + d.lat));
-      requestAnimationFrame(animate);
-    })();
-
-    let isPlaying = false;
-    let playInterval;
-    const playBtn = document.getElementById("playBtn");
-    playBtn.addEventListener("click", () => {
-      if (!isPlaying) {
-        isPlaying = true;
-        playBtn.textContent = "⏸ Pause";
-        playInterval = setInterval(() => {
-          let nextMonth = (parseInt(slider.value) + 1) % 12;
-          slider.value = nextMonth;
-          updateGlobe(nextMonth);
-        }, 1000);
-      } else {
-        isPlaying = false;
-        playBtn.textContent = "▶ Play";
-        clearInterval(playInterval);
-      }
-    });
-
-    // --------------------------------
-    // Chart logic & interactivity
-    // --------------------------------
-    const locations = {
-      "Japan": { lat: 36.2048, lon: 138.2529, species: "Cherry Blossom - Sakura" },
-      "Alaska": { lat: 64.2008, lon: -149.4937, species: "Lupine & Arctic Poppy" },
-      "Madagascar": { lat: -18.7669, lon: 46.8691, species: "Baobab & Traveler's Palm" },
-      "New Zealand": { lat: -40.9006, lon: 174.8860, species: "Kōwhai & Pohutukawa" },
-      "Fiji": { lat: -17.7134, lon: 178.0650, species: "Hibiscus & Breadfruit" }
-    };
-    let currentLocation = 'Japan';
-    let fetchedNDVI = null;
-    let myChart = null;
-    let selectedDataPointIndex = null;
-
-    async function fetchDataAndLoad() {
-      // Here use real data source or JSON fetch
-      return loadNDVI();
-    }
-
-    function updateChart(locName) {
-      currentLocation = locName;
-      const chartData = fetchedNDVI[locName];
-      if (!chartData) return;
-
-      const { dates, ndvi, predicted } = chartData;
-      // combine for chart
-      const allDates = [...dates, ...predicted.map((_, i) => new Date(dates[dates.length-1].getFullYear(), dates[dates.length-1].getMonth() + i + 1, 1))];
-      const allValues = [...ndvi, ...predicted];
-
-      const lastHistIndex = ndvi.length - 1;
-
-      const ctx = document.getElementById('ndviChart').getContext('2d');
-      document.getElementById('ndviChart').classList.remove('hidden');
-      document.getElementById('chart-status').style.display = 'none';
-      if (myChart) myChart.destroy();
-
-      myChart = new Chart(ctx, {
-        type: 'line',
-        data: {
-          labels: allDates.map(d => d.toLocaleString('default', { month: 'short', year: 'numeric' })),
-          datasets: [
-            {
-              label: 'Historical NDVI',
-              data: ndvi,
-              borderColor: '#2ca02c',
-              backgroundColor: 'rgba(44, 160, 44, 0.4)',
-              pointBackgroundColor: '#2ca02c',
-              borderWidth: 2,
-              pointRadius: 3,
-              tension: 0.4,
-              fill: true
-            },
-            {
-              label: 'Predicted NDVI',
-              data: allValues,
-              borderColor: '#d84594',
-              backgroundColor: 'rgba(216, 69, 148, 0.4)',
-              pointBackgroundColor: '#d84594',
-              borderWidth: 2,
-              pointRadius: 3,
-              tension: 0.4,
-              fill: false,
-              borderDash: [5, 5],
-              segment: {
-                borderColor: ctx => {
-                  // After last historical, change color
-                  return ctx.p0DataIndex > lastHistIndex ? '#d84594' : '#2ca02c';
-                }
-              }
-            }
-          ]
+  const ndviChart = new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels: [],
+      datasets: [
+        {
+          label: 'NDVI',
+          data: [],
+          borderColor: '#ff1493',
+          backgroundColor: 'rgba(255,20,147,0.3)',
+          pointRadius: 3,
+          fill: true,
+          tension: 0.3
+        }
+      ]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      animation: {duration: 500},
+      scales: {
+        x: {
+          type: 'time',
+          time: { unit: 'month', tooltipFormat: 'MMM YYYY' },
+          ticks: { color: '#ff1493' },
+          grid: { color: 'rgba(255,20,147,0.1)' }
         },
-        options: {
-          responsive: true,
-          maintainAspectRatio: false,
-          scales: {
-            x: {
-              title: { display: true, text: 'Date', color: '#9ca3af' },
-              ticks: { color: '#9ca3af', autoSkip: true, maxTicksLimit: 12 },
-              grid: { color: 'rgba(156, 163, 175, 0.1)' }
-            },
-            y: {
-              title: { display: true, text: 'NDVI (Vegetation Index)', color: '#9ca3af' },
-              min: 0, max: 1,
-              ticks: { color: '#9ca3af' },
-              grid: { color: 'rgba(156, 163, 175, 0.1)' }
-            }
-          },
-          plugins: {
-            legend: { labels: { color: '#e5e7eb' } },
-            tooltip: {
-              backgroundColor: 'rgba(31, 41, 55, 0.8)',
-              titleColor: '#e5e7eb',
-              bodyColor: '#9ca3af'
-            }
-          },
-          onClick: (evt, elements) => {
-            if (elements.length) {
-              const el = elements[0];
-              selectedDataPointIndex = el.index;
-              const label = myChart.data.labels[selectedDataPointIndex];
-              document.getElementById('selected-month-text').textContent = label;
-              document.getElementById('selected-month-info').classList.remove('hidden');
-            }
-          }
+        y: {
+          min: 0,
+          max: 1,
+          ticks: { color: '#ff1493' },
+          grid: { color: 'rgba(255,20,147,0.1)' },
+          title: { display: true, text: 'NDVI (Vegetation Index)', color: '#ff1493' }
         }
-      });
-
-      document.getElementById('data-visualization-info').innerHTML =
-        `<h3 class="text-xl font-semibold mb-2">${locName}</h3><p class="text-gray-400">Click a data point to request AI prediction.</p>`;
-      document.getElementById('selected-month-info').classList.add('hidden');
-    }
-
-    function getPredictionForSelectedMonth() {
-      if (selectedDataPointIndex === null) {
-        document.getElementById('ai-response-container').textContent = "Please select a data point first.";
-        return;
-      }
-      const val = myChart.data.datasets[0].data[selectedDataPointIndex] ??
-                  myChart.data.datasets[1].data[selectedDataPointIndex];
-      const label = myChart.data.labels[selectedDataPointIndex];
-      const loc = currentLocation;
-      const species = locations[loc].species;
-
-      const type = selectedDataPointIndex < fetchedNDVI[loc].ndvi.length ? 'historical' : 'predicted';
-
-      const prompt = `Based on the ${type} NDVI value of ${val.toFixed(2)} for ${label} in ${loc}, analyze vegetation health. Prominent species: ${species}.`;
-
-      getAIPrediction(prompt);
-    }
-
-    async function getAIPrediction(prompt) {
-      const container = document.getElementById('ai-response-container');
-      container.innerHTML = `<div class="loader mx-auto"></div><div class="mt-2 text-gray-400 text-center">Processing...</div>`;
-      // Placeholder — integrate your AI endpoint here
-      await new Promise(r => setTimeout(r, 1000));
-      container.textContent = `AI: (this is simulated) Analysis for prompt: "${prompt}"`;
-    }
-
-    function initMap() {
-      const map = L.map('map').setView([20, 0], 2);
-      L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
-        attribution: '&copy; OpenStreetMap & CARTO',
-        maxZoom: 19
-      }).addTo(map);
-      for (const loc in locations) {
-        const coords = locations[loc];
-        const marker = L.marker([coords.lat, coords.lon]).addTo(map);
-        marker.bindPopup(loc);
-        marker.on('click', () => {
-          updateChart(loc);
-          GlobeObj.pointOfView({ lat: coords.lat, lng: coords.lon, altitude: 2 }, 2000);
-        });
+      },
+      plugins: {
+        legend: { labels: { color: '#ff1493' } }
       }
     }
+  });
 
-    function createCountryButtons() {
-      const container = document.getElementById('country-buttons-container');
-      Object.keys(locations).forEach(loc => {
-        const btn = document.createElement('button');
-        btn.textContent = loc;
-        btn.className = 'bg-gray-800 text-gray-300 py-2 px-4 rounded-full transition-colors duration-200 hover:bg-[#d84594] hover:text-white';
-        btn.onclick = () => {
-          updateChart(loc);
-          const coords = locations[loc];
-          GlobeObj.pointOfView({ lat: coords.lat, lng: coords.lon, altitude: 2 }, 2000);
-        };
-        container.appendChild(btn);
-      });
+  // === Select Country Functionality ===
+
+  const countryNameEl = document.getElementById('countryName');
+
+  function flyToLocation(lat, lon){
+    // Animate globe rotation to focus on lat/lon
+    const phi = (90 - lat) * (Math.PI / 180);
+    const theta = (lon + 180) * (Math.PI / 180);
+
+    // Animate rotation.y to theta, rotation.x to phi (approx)
+    // We'll just set rotation.y = theta - Math.PI (simple approx)
+    const targetY = theta - Math.PI;
+    const targetX = phi - Math.PI / 2;
+
+    let frame = 0;
+    const frames = 60;
+    const startY = Globe.rotation.y;
+    const startX = Globe.rotation.x;
+    function animateRotation(){
+      frame++;
+      Globe.rotation.y = startY + (targetY - startY) * frame/frames;
+      Globe.rotation.x = startX + (targetX - startX) * frame/frames;
+      if(frame < frames){
+        requestAnimationFrame(animateRotation);
+      }
+    }
+    animateRotation();
+  }
+
+  function updateChart(country){
+    const data = ndviData[country];
+    if(!data) {
+      countryNameEl.textContent = `No NDVI data for ${country}`;
+      ndviChart.data.labels = [];
+      ndviChart.data.datasets[0].data = [];
+      ndviChart.update();
+      return;
     }
 
-    window.onload = async () => {
-      const status = document.getElementById('chart-status');
-      if (typeof Chart === 'undefined') {
-        status.textContent = "Error: Chart.js not loaded.";
-        return;
+    countryNameEl.textContent = country;
+
+    ndviChart.data.labels = data.map(d => d.date);
+    ndviChart.data.datasets[0].data = data.map(d => ({x: d.date, y: d.ndvi}));
+    ndviChart.update();
+  }
+
+  // Map country names from globe to our dataset keys (simplified)
+  // You can extend this mapping if you add more countries
+  const countryMapping = {
+    "Japan": "Japan",
+    "United States of America": "Alaska",
+    "Madagascar": "Madagascar",
+    "New Zealand": "New Zealand",
+    "Fiji": "Fiji"
+  };
+
+  // Handle clicks on countries
+  Globe.polygonsMeshes.forEach(mesh => {
+    mesh.cursor = 'pointer';
+  });
+
+  renderer.domElement.addEventListener('click', event => {
+    const rect = renderer.domElement.getBoundingClientRect();
+    mouse.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
+    mouse.y = - ((event.clientY - rect.top) / rect.height) * 2 + 1;
+
+    raycaster.setFromCamera(mouse, camera);
+    const intersects = raycaster.intersectObjects(Globe.polygonsMeshes);
+
+    if(intersects.length > 0){
+      const props = intersects[0].object.userData.feature.properties;
+      const countryName = props.ADMIN;
+
+      const mappedCountry = countryMapping[countryName];
+      if(mappedCountry){
+        const loc = locations[mappedCountry];
+        flyToLocation(loc.lat, loc.lon);
+        updateChart(mappedCountry);
+      } else {
+        countryNameEl.textContent = `No data for ${countryName}`;
       }
-      status.textContent = "Loading data...";
-      fetchedNDVI = await fetchDataAndLoad();
-      status.textContent = "Data loaded.";
-      initMap();
-      createCountryButtons();
-      updateChart('Japan');
-      document.getElementById('get-prediction-button').addEventListener('click', getPredictionForSelectedMonth);
-      document.getElementById('hdf-file-input').addEventListener('change', (ev) => {
-        if (ev.target.files.length > 0) {
-          const msg = document.getElementById('upload-status-message');
-          msg.classList.remove('text-gray-500');
-          msg.classList.add('text-yellow-400');
-          msg.textContent = 'Processing file...';
-          setTimeout(() => {
-            msg.classList.remove('text-yellow-400');
-            msg.classList.add('text-green-400');
-            msg.textContent = 'File loaded (simulated).';
-            updateChart(currentLocation);
-          }, 2000);
-        }
-      });
-    };
-  </script>
+    }
+  });
+
+</script>
+
+<!-- Topojson for converting countries -->
+<script src="https://cdn.jsdelivr.net/npm/topojson@3"></script>
 
 </body>
 </html>

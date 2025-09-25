@@ -1,18 +1,19 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>AstroBloom Globe</title>
+  <meta charset="UTF-8" />
+  <title>Astrobloom Interactive Globe</title>
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;700&display=swap" rel="stylesheet">
   <style>
-    body {
-      margin: 0;
-      background: black;
-      font-family: 'Syne', sans-serif;
+    body { 
+      margin: 0; 
+      background: transparent; 
+      font-family: 'Syne', sans-serif; 
       overflow: hidden;
     }
-    #globeViz {
-      width: 100vw;
-      height: 100vh;
+    #globeViz { 
+      width: 100vw; 
+      height: 100vh; 
     }
     #sliderContainer {
       position: absolute;
@@ -22,8 +23,8 @@
       color: white;
       font-size: 1.2em;
     }
-    input[type="range"] {
-      width: 60%;
+    input[type="range"] { 
+      width: 60%; 
     }
     #playBtn {
       margin-top: 10px;
@@ -52,26 +53,69 @@
 
     const bloomData = [];
 
-    // Helper to add bloom points
-    function addBloom(lat, lng, month, color, label, species, note, count=10, spread=3) {
-      for (let i = 0; i < count; i++) {
+    // generate multiple points spread around a region
+    function addBloom(lat, lng, month, info, count=10, spread=3) {
+      for (let i=0; i<count; i++) {
         bloomData.push({
           lat: lat + (Math.random()-0.5)*spread,
           lng: lng + (Math.random()-0.5)*spread,
           month,
-          color,
-          label,
-          species,
-          note
+          ...info   // spreads color, label, species, note
         });
       }
     }
 
-    // Example: Japan cherry blossoms
-    ["#f484d4ff","#e647b9ff","#ab8aecff","#d56de3ff","#e898ecff","#f399f0ff","#de4242ff","#c27d37ff","#e16473ff","#f1ebb2ff","#f5a2acff","#e8eb49ff"]
-      .forEach((color, i) => {
-        addBloom(36.2, 138.2, i, color, "Japan", "Cherry Blossom - Sakura", "Cultural symbol; peak bloom in spring");
-      });
+    // --- BLOOM DATA WITH SPECIES + NOTES ---
+
+    // Japan (Cherry Blossom + seasonal shifts)
+    ["#e8eb49ff","#f5a2acff","#f484d4ff","#e647b9ff","#ab8aecff","#d56de3ff","#e898ecff","#f399f0ff","#de4242ff","#c27d37ff","#e16473ff","#f1ebb2ff"].forEach((color, i)=>{
+      addBloom(36.2,138.2,i,{
+        color,
+        label:"Japan",
+        species:"Cherry Blossom - Sakura",
+        note:"Cultural symbol, peak bloom in spring; critical for pollinators."
+      },15,5);
+    });
+
+    // Alaska (Wildflowers + tundra plants)
+    ["#83b1ddff","#649ac8ff","#a2d7ecff","#6a5acd","#8f2da0ff","#d25db9ff","#cad239ff","#d9eaa5ff","#94dee1ff","#5cabcaff","#34879eff","#4b6cb1ff"].forEach((color,i)=>{
+      addBloom(64.2,-149.5,i,{
+        color,
+        label:"Alaska",
+        species:"Lupine and Arctic Poppy",
+        note:"Short growing season; blooms support insects."
+      },12,6);
+    });
+
+    // Madagascar (Baobabs + tropical flowers)
+    ["#2e7d32","#4b9d4fff","#6bc56fff","#e1a2d6ff","#8be0ddff","#98d6e7ff","#8ae5e5ff","#9adbedff","#c71585","#edb232ff","#e2b330ff","#b288d1ff"].forEach((color,i)=>{
+      addBloom(-18.9,47.5,i,{
+        color,
+        label:"Madagascar",
+        species:"Baobab and Traveler's Palm",
+        note:"Unique flora; blooms influence lemur feeding and pollination."
+      },15,5);
+    });
+
+    // New Zealand (Kōwhai + native shrubs)
+    ["#ff1493","#ff1493","#ff8c00","#b22222","#b22222","#778899","#87ceeb","#ffb6c1","#ffff00","#e3e54eff","#cb84c9ff","#b52212ff"].forEach((color,i)=>{
+      addBloom(-40.9,174.9,i,{
+        color,
+        label:"New Zealand Bloom",
+        species:"Kōwhai and Pohutukawa",
+        note:"Seasonal shifts vital for native birds like tui and bellbirds."
+      },15,5);
+    });
+
+    // Fiji (Hibiscus + tropical crops)
+    ["#ebe41fff","#efa3eeff","#e28ee8ff","#ef6caeff","#ea9cd4ff","#da48c2ff","#ffffff","#ff4500","#ea8ecbff","#edaa92ff","#eea58bff","#e69a87ff"].forEach((color,i)=>{
+      addBloom(-17.7,178.1,i,{
+        color,
+        label:"Fiji",
+        species:"Hibiscus and Breadfruit",
+        note:"Blooms tied to rainfall cycles; important for pollinators and agriculture."
+      },15,5);
+    });
 
     // Initialize globe
     const GlobeObj = Globe()
@@ -79,14 +123,20 @@
       .pointAltitude(d => 0.02 + 0.02*Math.sin(Date.now()*0.005 + d.lat))
       .pointRadius(0.4)
       .pointColor(d => d.color)
-      .pointLabel(d => `<b>${d.label}</b><br><i>${d.species}</i><br>${d.note}`);
+      .pointLabel(d => `
+        <b>${d.label}</b><br>
+        <i>${d.species}</i><br>
+        ${d.note}
+      `);
 
-    GlobeObj(document.getElementById('globeViz'));
+    const globeElement = document.getElementById('globeViz');
+    GlobeObj(globeElement);
 
     // Auto-rotate slower
     GlobeObj.controls().autoRotate = true;
-    GlobeObj.controls().autoRotateSpeed = 0.2;
+    GlobeObj.controls().autoRotateSpeed = 0.2; // slower rotation
 
+    // Timeline slider logic
     const slider = document.getElementById("monthSlider");
     const label = document.getElementById("monthLabel");
 
@@ -108,7 +158,7 @@
       requestAnimationFrame(animate);
     })();
 
-    // Play button
+    // --- Play Button Logic ---
     let isPlaying = false;
     let playInterval;
     const playBtn = document.getElementById("playBtn");
@@ -121,7 +171,7 @@
           let nextMonth = (parseInt(slider.value) + 1) % 12;
           slider.value = nextMonth;
           updateGlobe(nextMonth);
-        }, 1000);
+        }, 1000); // 1 second per month
       } else {
         isPlaying = false;
         playBtn.textContent = "▶ Play";

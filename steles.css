@@ -1,0 +1,140 @@
+/* Update: Added the new variables and styles for the About Page */
+:root {
+    --primary-pink: #ad1c69; /* Dark Pink Flower from your header */
+    --secondary-pink: #ff4a9e; /* Lighter/Vibrant Pink for accents */
+    --background-black: black;
+    --text-light: white;
+}
+
+/* General Layout for About Page */
+.about-page {
+    min-height: 100vh;
+    background-color: var(--background-black);
+    /* This creates the dark, futuristic backdrop for the glassy effect to stand out */
+    padding-top: 80px; /* Space for the fixed header */
+    padding-bottom: 60px; /* Space for the fixed footer */
+    background-image: linear-gradient(rgba(0,0,0,0.8), rgba(0,0,0,0.9)), 
+                      url('futuristic_dark_background.jpg'); /* Use a subtle dark, space-themed background image */
+    background-size: cover;
+    background-attachment: fixed;
+}
+
+.content-container {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 0 20px;
+}
+
+/* Glassy Effect Mixin */
+.glassy-box {
+    /* The key to the glassy effect */
+    background: rgba(255, 255, 255, 0.08); /* Slightly visible light background */
+    backdrop-filter: blur(10px) saturate(180%);
+    -webkit-backdrop-filter: blur(10px) saturate(180%);
+    
+    border: 1px solid rgba(255, 255, 255, 0.15); /* Light border */
+    border-radius: 15px;
+    box-shadow: 0 4px 30px rgba(0, 0, 0, 0.2);
+    transition: all 0.3s ease;
+}
+
+/* Text Styling */
+.glassy-text {
+    color: var(--text-light);
+    text-shadow: 0 0 10px rgba(255, 74, 158, 0.5); /* Soft pink glow */
+    font-weight: 800;
+}
+
+.about-hero {
+    text-align: center;
+    padding: 60px 0;
+}
+
+.about-hero h1 {
+    font-size: 5em;
+    color: var(--primary-pink); /* Logo color for main title */
+}
+
+.about-hero h2 {
+    font-size: 2em;
+    font-weight: 400;
+    margin-bottom: 40px;
+}
+
+.mission-card {
+    padding: 40px;
+    margin: 0 auto;
+    max-width: 800px;
+}
+
+.mission-card p {
+    font-size: 1.15em;
+    margin-bottom: 20px;
+    line-height: 1.8;
+    color: #e0e0e0;
+}
+
+.mission-card strong {
+    color: var(--secondary-pink);
+    font-weight: 700;
+}
+
+/* Team Section Styling */
+.team-section {
+    padding: 40px 0;
+    text-align: center;
+}
+
+.team-intro {
+    color: #a0a0a0;
+    margin-bottom: 40px;
+    font-size: 1.1em;
+}
+
+.team-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 25px;
+    padding: 20px 0;
+}
+
+.member-card {
+    padding: 25px;
+    text-align: center;
+}
+
+.member-card:hover {
+    transform: translateY(-5px);
+    border-color: var(--secondary-pink);
+    box-shadow: 0 8px 40px rgba(255, 74, 158, 0.3); /* Stronger pink glow on hover */
+}
+
+.member-card h3 {
+    font-size: 1.5em;
+    font-weight: 700;
+    color: var(--secondary-pink);
+    margin-bottom: 5px;
+}
+
+.member-card .role {
+    font-size: 0.9em;
+    color: #c0c0c0;
+    font-weight: 400;
+    font-style: italic;
+}
+
+/* Responsive adjustments for smaller screens */
+@media (max-width: 768px) {
+    .about-hero h1 {
+        font-size: 3.5em;
+    }
+    .about-hero h2 {
+        font-size: 1.5em;
+    }
+    .mission-card {
+        padding: 20px;
+    }
+    .team-grid {
+        grid-template-columns: 1fr;
+    }
+}

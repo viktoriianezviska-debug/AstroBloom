@@ -9,8 +9,6 @@
   <script src="https://unpkg.com/globe.gl"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
   <script src="https://cdn.tailwindcss.com"></script>
-  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <style>
     :root {
       --accent: #ff2d84;
@@ -21,44 +19,38 @@
 
     html,
     body {
-      height: 100%;
+      height: auto; /* Changed to auto */
       margin: 0;
       background: #000;
       color: #fff;
       font-family: 'Syne', sans-serif;
-      overflow: hidden;
+      overflow-x: hidden; /* Prevent horizontal scroll */
     }
 
     .container {
       display: flex;
-      height: 100vh;
+      flex-direction: column; /* Stack items vertically */
+      align-items: center; /* Center items horizontally */
+      padding: 20px; /* Add padding around the content */
     }
 
     .globe-section {
-      flex: 0.6;
-      /* 60% width for globe */
-      display: flex;
-      flex-direction: column;
-      align-items: stretch;
-      justify-content: stretch;
-      position: relative;
+      width: 90%; /* Make globe section responsive */
+      max-width: 800px; /* Limit maximum width */
+      margin-bottom: 20px; /* Add spacing between sections */
     }
 
     #globeViz {
-      flex: 1;
+      width: 100%; /* Make globe fill its container */
+      height: 400px; /* Fixed height for the globe */
       background: transparent;
     }
 
     .globe-controls {
-      position: absolute;
-      bottom: 20px;
-      left: 0;
-      width: 100%;
       text-align: center;
       color: white;
       font-size: 1.2em;
-      z-index: 2;
-      /* Ensure controls are above the globe */
+      margin-top: 10px;
     }
 
     .globe-controls input[type="range"] {
@@ -66,10 +58,8 @@
     }
 
     .dashboard-section {
-      flex: 0.4;
-      /* 40% width for dashboard */
-      background: transparent;
-      padding: 20px;
+      width: 90%; /* Make dashboard section responsive */
+      max-width: 800px; /* Limit maximum width */
       display: flex;
       flex-direction: column;
       gap: 20px;
@@ -82,13 +72,6 @@
       box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
     }
 
-    #map {
-      height: 300px;
-      border-radius: 1rem;
-      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-      transition: all 0.3s ease-in-out;
-    }
-
     .chart-container {
       position: relative;
       height: 300px;
@@ -97,7 +80,7 @@
 
     #country-buttons-container {
       display: grid;
-      grid-template-columns: repeat(3, 1fr);
+      grid-template-columns: repeat(auto-fit, minmax(100px, 1fr)); /* Responsive grid */
       gap: 8px;
     }
 
@@ -226,8 +209,6 @@
           <p id="upload-status-message" class="text-sm text-gray-500 mt-2"></p>
         </div>
       </div>
-
-      <div id="map" class="chart-card"></div>
     </div>
   </div>
 
@@ -292,23 +273,27 @@
         note: "Blooms tied to rainfall cycles; important for pollinators and agriculture."
       }, 15, 5);
     });
-    // Initialize globe
-    const GlobeObj = Globe()
-      .globeImageUrl('//unpkg.com/three-globe/example/img/earth-blue-marble.jpg')
-      .backgroundColor('rgba(0,0,0,0)')
-      .pointAltitude(d => 0.02 + 0.02 * Math.sin(Date.now() * 0.005 + d.lat))
-      .pointRadius(0.4)
-      .pointColor(d => d.color)
-      .pointLabel(d => `
-          <b>${d.label}</b>
-          <i>${d.species}</i>
-          ${d.note}
-        `);
-    const globeElement = document.getElementById('globeViz');
-    GlobeObj(globeElement);
-    // Auto-rotate slower
-    GlobeObj.controls().autoRotate = true;
-    GlobeObj.controls().autoRotateSpeed = 0.2; // slower rotation
+
+    let GlobeObj; // Declare GlobeObj outside the function
+
+    function initializeGlobe() {
+      GlobeObj = Globe()
+        .globeImageUrl('//unpkg.com/three-globe/example/img/earth-blue-marble.jpg')
+        .backgroundColor('rgba(0,0,0,0)')
+        .pointAltitude(d => 0.02 + 0.02 * Math.sin(Date.now() * 0.005 + d.lat))
+        .pointRadius(0.4)
+        .pointColor(d => d.color)
+        .pointLabel(d => `
+            <b>${d.label}</b>
+            <i>${d.species}</i>
+            ${d.note}
+          `);
+      const globeElement = document.getElementById('globeViz');
+      GlobeObj(globeElement);
+      // Auto-rotate slower
+      GlobeObj.controls().autoRotate = true;
+      GlobeObj.controls().autoRotateSpeed = 0.1; // slower rotation
+    }
 
     function ndviColor(v) {
       const g = Math.round(200 * v + 40);
@@ -345,34 +330,48 @@
       updateGlobe(monthIndex);
     }
 
-    updateGlobeText(0);
-    slider.addEventListener("input", e => {
-      updateGlobeText(parseInt(e.target.value));
-    });
-    // Pulsing animation
-    (function animate() {
-      GlobeObj.pointAltitude(d => 0.02 + 0.02 * Math.sin(Date.now() * 0.005 + d.lat));
-      requestAnimationFrame(animate);
-    })();
     // --- Play Button Logic ---
     let isPlaying = false;
     let playInterval;
     const playBtn = document.getElementById("playBtn");
-    playBtn.addEventListener("click", () => {
-      if (!isPlaying) {
-        isPlaying = true;
-        playBtn.textContent = "⏸ Pause";
-        playInterval = setInterval(() => {
-          let nextMonth = (parseInt(slider.value) + 1) % 12;
-          slider.value = nextMonth;
-          updateGlobeText(nextMonth);
-        }, 1000); // 1 second per month
-      } else {
-        isPlaying = false;
-        playBtn.textContent = "▶ Play";
-        clearInterval(playInterval);
-      }
-    });
+
+    function setupPlayButton() {
+      playBtn.addEventListener("click", () => {
+        if (!isPlaying) {
+          isPlaying = true;
+          playBtn.textContent = "⏸ Pause";
+          playInterval = setInterval(() => {
+            let nextMonth = (parseInt(slider.value) + 1) % 12;
+            slider.value = nextMonth;
+            updateGlobeText(nextMonth);
+          }, 1000); // 1 second per month
+        } else {
+          isPlaying = false;
+          playBtn.textContent = "▶ Play";
+          clearInterval(playInterval);
+        }
+      });
+    }
+
+    // --- Country Button Logic ---
+    function createCountryButtons() {
+      const buttonContainer = document.getElementById('country-buttons-container');
+      const locationsArray = Object.keys(locations);
+
+      locationsArray.forEach(loc => {
+        const button = document.createElement('button');
+        button.textContent = loc;
+        button.addEventListener('click', () => {
+          flyToLocation(locations[loc].lat, locations[loc].lon);
+          updateChart(loc);
+        });
+        buttonContainer.appendChild(button);
+      });
+    }
+
+    function flyToLocation(lat, lng) {
+      GlobeObj.cameraLookAt({ lat, lng, altitude: 1.5 });
+    }
 
     document.getElementById('pollinatorToggle').addEventListener('change', () => updateGlobeText(parseInt(slider.value)));
     document.getElementById('ndviToggle').addEventListener('change', () => updateGlobeText(parseInt(slider.value)));
@@ -620,42 +619,6 @@
       }, 1500);
     }
 
-    function initMap() {
-      if (typeof L === 'undefined') {
-        console.error("Leaflet.js not loaded. Map cannot be initialized.");
-        return;
-      }
-      const map = L.map('map').setView([20, 0], 2);
-      L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
-        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
-        subdomains: 'abcd',
-        maxZoom: 19
-      }).addTo(map);
-      for (const loc in locations) {
-        const coords = locations[loc];
-        const marker = L.marker([coords.lat, coords.lon]).addTo(map);
-        marker.bindPopup(loc);
-        marker.on('click', () => {
-          updateChart(loc);
-        });
-      }
-    }
-
-    function createCountryButtons() {
-      const buttonContainer = document.getElementById('country-buttons-container');
-      const locationsArray = Object.keys(locations);
-
-      locationsArray.forEach(loc => {
-        const button = document.createElement('button');
-        button.textContent = loc;
-        button.className = 'bg-gray-800 text-gray-300 py-2 px-4 rounded-full transition-colors duration-200 hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50';
-        button.addEventListener('click', () => {
-          updateChart(loc);
-        });
-        buttonContainer.appendChild(button);
-      });
-    }
-
     window.onload = async () => {
       const chartStatus = document.getElementById('chart-status');
       const ndviChart = document.getElementById('ndviChart');
@@ -675,13 +638,20 @@
         chartStatus.textContent = "Failed to load data. Please check the console for errors.";
         console.error("Initialization error:", error);
       }
-      initMap();
+
+      initializeGlobe(); // Initialize the globe
       createCountryButtons();
+      updateGlobeText(0); // Initial globe update
       updateChart('Japan');
 
       if (getPredictionButton) {
         getPredictionButton.addEventListener('click', getPredictionForSelectedMonth);
       }
+      slider.addEventListener("input", e => {
+        updateGlobeText(parseInt(e.target.value));
+      });
+      setupPlayButton();
+
       hdfFileInput.addEventListener('change', (event) => {
         if (event.target.files.length > 0) {
           uploadStatusMessage.className = 'text-sm text-yellow-400 mt-2';

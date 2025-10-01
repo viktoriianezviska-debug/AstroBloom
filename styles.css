@@ -21,13 +21,13 @@ html, body {
     color: var(--text-light); 
 }
 
-/* --- HEADER STYLES (Copied verbatim from your inline style) --- */
+/* --- HEADER STYLES (Fixed Navigation Bar) --- */
 header {
     position: fixed;
     top: 0;
     width: 100%;
     background-color: var(--background-black); 
-    color: black; /* This color rule is mostly irrelevant due to link colors, but kept for fidelity */
+    color: black; 
     display: flex;
     align-items: center;
     padding: 12px 20px;
@@ -73,7 +73,7 @@ header nav a:hover {
     justify-content: center;
     align-items: center;
     text-align: center;
-    padding-top: 60px; /* space for fixed header */
+    padding-top: 80px; /* Standardized to 80px to clear the fixed header */
 }
 
 /* Title & Subtitle */
@@ -109,35 +109,16 @@ a.explore-button:hover {
     color: var(--background-black);
 }
 
-/* --- FOOTER STYLES (Copied verbatim from your inline style) ---*/
-footer {
-    background-color: var(--background-black);
-    color: var(--text-light);
-    font-family: 'Syne', sans-serif;
-    font-size: 36px; /* Your original large font size */
-    line-height: 1.8;
-    padding: 20px 30px;
-    text-align: left; /* Your original left-aligned text */
-    position: fixed;
-    bottom: 0;
-    width: 100%;
-    display: flex;
-    box-shadow: 0 -2px 6px rgba(0,0,0,0.4);
-    /* Added justify-content to match the center alignment of the header if needed */
-    justify-content: center;
-}
-
-/* --- ABOUT PAGE SPECIFIC STYLES (Glassy) --- */
-.about-page {
+/* --- ABOUT & PROJECT PAGE STYLES (Content Container) --- */
+.about-page, .project-page {
     min-height: 100vh;
     background-color: var(--background-black);
     /* Subtle background image for the futuristic feel */
     background-image: linear-gradient(rgba(0,0,0,0.9), rgba(0,0,0,0.95)), 
-                      url('futuristic_dark_pattern.jpg'); 
+                      url('about_background.jpg'); /* CHANGE THIS FILENAME */
     background-size: cover;
     background-attachment: fixed;
     padding-top: 80px; /* Space for the fixed header */
-    padding-bottom: 60px; /* Space for the fixed footer */
 }
 
 .content-container {
@@ -171,7 +152,13 @@ footer {
     font-size: 5em;
     color: var(--primary-pink); 
 }
-/* Team and Mission Card styles below this line are consistent with previous responses */
+.about-hero h2 {
+    font-size: 2em;
+    font-weight: 400;
+    margin-bottom: 40px;
+}
+
+/* Team and Mission Card styles */
 .mission-card {padding: 40px; margin: 0 auto; max-width: 800px;}
 .mission-card p {font-size: 1.15em; margin-bottom: 20px; line-height: 1.8; color: #e0e0e0;}
 .mission-card strong {color: var(--secondary-pink); font-weight: 700;}
@@ -209,10 +196,5 @@ footer {
     }
     .team-grid {
         grid-template-columns: 1fr;
-    }
-    
-    /* Footer */
-    footer{
-        font-size: 14px;
     }
 }

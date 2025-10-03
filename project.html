@@ -165,12 +165,12 @@
           <label for="hdf-file-input" class="block text-gray-400 font-medium">Upload a MODIS HDF file:</label>
           <input type="file" id="hdf-file-input" accept=".hdf"
             class="block w-full text-sm text-gray-500
-                        file:mr-4 file:py-2 file:px-4
-                        file:rounded-full file:border-0
-                        file:text-sm file:font-semibold
-                        file:bg-violet-50 file:text-violet-700
-                        hover:file:bg-violet-100
-                    ">
+                        file:mr-4 file:py-2 file:px-4
+                        file:rounded-full file:border-0
+                        file:text-sm file:font-semibold
+                        file:bg-violet-50 file:text-violet-700
+                        hover:file:bg-violet-100
+                    ">
           <p id="upload-status-message" class="text-sm text-gray-500 mt-2"></p>
         </div>
       </div>
@@ -189,117 +189,135 @@
   </div>
 
   <script>
-    // --- Globe Visualization ---
+    // --- Shared Constants ---
     const monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September",
       "October", "November", "December"
     ];
-    const bloomData = [];
 
-    function addBloom(lat, lng, month, info, count = 10, spread = 3) {
-      for (let i = 0; i < count; i++) {
-        bloomData.push({
-          lat: lat + (Math.random() - 0.5) * spread,
-          lng: lng + (Math.random() - 0.5) * spread,
-          month,
-          ...info
-        });
-      }
+    // --- Globe Visualization (NEW RING-BASED LOGIC) ---
+    // Your provided bloom colors and multi-location data:
+    const bloomColors = {
+      Japan: ["#e8eb49", "#f5a2ac", "#f484d4", "#e647b9", "#ab8aec", "#d56de3", "#e898ec", "#f399f0", "#de4242",
+        "#c27d37", "#e16473", "#f1ebb2"
+      ],
+      Alaska: ["#83b1dd", "#649ac8", "#a2d7ec", "#6a5acd", "#8f2da0", "#d25db9", "#cad239", "#d9eaa5", "#94dee1",
+        "#5cabcaff", "#34879e", "#4b6cb1"
+      ],
+      Madagascar: ["#2e7d32", "#4b9d4f", "#6bc56f", "#e1a2d6", "#8be0dd", "#98d6e7", "#8ae5e5", "#9adbed", "#c71585",
+        "#edb232", "#e2b330", "#b288d1"
+      ],
+      NewZealand: ["#ff1493", "#ff1493", "#ff8c00", "#b22222", "#b22222", "#778899", "#87ceeb", "#ffb6c1", "#ffff00",
+        "#e3e54e", "#cb84c9", "#b52212"
+      ],
+      Fiji: ["#ebe41f", "#efa3ee", "#e28ee8", "#ef6cae", "#ea9cd4", "#da48c2", "#ffffff", "#ff4500", "#ea8ecb",
+        "#edaa92", "#eea58b", "#e69a87"
+      ]
+    };
+    const globeLocations = {
+      Japan: [
+        { lat: 35.6895, lng: 139.6917, label: "Tokyo" },
+        { lat: 34.6937, lng: 135.5023, label: "Osaka" },
+        { lat: 35.0116, lng: 135.7681, label: "Kyoto" },
+        { lat: 43.06417, lng: 141.34694, label: "Sapporo" },
+        { lat: 33.5902, lng: 130.4017, label: "Fukuoka" }
+      ],
+      Alaska: [
+        { lat: 61.2181, lng: -149.9003, label: "Anchorage" },
+        { lat: 64.8378, lng: -147.7164, label: "Fairbanks" },
+        { lat: 58.3019, lng: -134.4197, label: "Juneau" },
+        { lat: 64.5011, lng: -165.4064, label: "Nome" },
+        { lat: 60.1042, lng: -149.4422, label: "Seward" }
+      ],
+      Madagascar: [
+        { lat: -18.8792, lng: 47.5079, label: "Antananarivo" },
+        { lat: -18.1494, lng: 49.4021, label: "Toamasina" },
+        { lat: -15.7167, lng: 46.3167, label: "Mahajanga" },
+        { lat: -23.3510, lng: 43.6667, label: "Toliara" },
+        { lat: -12.2760, lng: 49.3110, label: "Antsiranana" }
+      ],
+      NewZealand: [
+        { lat: -36.8485, lng: 174.7633, label: "Auckland" },
+        { lat: -41.2865, lng: 174.7762, label: "Wellington" },
+        { lat: -43.5321, lng: 172.6362, label: "Christchurch" },
+        { lat: -45.8788, lng: 170.5028, label: "Dunedin" },
+        { lat: -37.7832, lng: 175.2793, label: "Hamilton" }
+      ],
+      Fiji: [
+        { lat: -18.1248, lng: 178.4501, label: "Suva" },
+        { lat: -17.7768, lng: 177.4358, label: "Nadi" },
+        { lat: -17.6160, lng: 177.4445, label: "Lautoka" },
+        { lat: -18.8139, lng: 178.8458, label: "Levuka" },
+        { lat: -16.4167, lng: 179.3833, label: "Labasa" }
+      ]
+    };
+
+    const numRipples = 12;
+    const basePeriod = 12000;
+
+    function hexToRgb(hex) {
+      const bigint = parseInt(hex.slice(1), 16);
+      return [(bigint >> 16) & 255, (bigint >> 8) & 255, bigint & 255];
     }
-
-    ["#e8eb49ff", "#f5a2acff", "#f484d4ff", "#e647b9ff", "#ab8aecff", "#d56de3ff", "#e898ecff", "#f399f0ff",
-      "#de4242ff", "#c27d37ff", "#e16473ff", "#f1ebb2ff"
-    ].forEach((color, i) => {
-      addBloom(36.2, 138.2, i, {
-        color,
-        label: "Japan",
-        species: "Cherry Blossom - Sakura",
-        note: "Cultural symbol, peak bloom in spring; critical for pollinators."
-      }, 15, 5);
-    });
-
-    ["#83b1ddff", "#649ac8ff", "#a2d7ecff", "#6a5acd", "#8f2da0ff", "#d25db9ff", "#cad239ff", "#d9eaa5ff",
-      "#94dee1ff", "#5cabcaff", "#34879eff", "#4b6cb1ff"
-    ].forEach((color, i) => {
-      addBloom(64.2, -149.5, i, {
-        color,
-        label: "Alaska",
-        species: "Lupine and Arctic Poppy",
-        note: "Short growing season; blooms support insects."
-      }, 12, 6);
-    });
-
-    ["#2e7d32", "#4b9d4fff", "#6bc56fff", "#e1a2d6ff", "#8be0ddff", "#98d6e7ff", "#8ae5e5ff", "#9adbedff",
-      "#c71585", "#edb232ff", "#e2b330ff", "#b288d1ff"
-    ].forEach((color, i) => {
-      addBloom(-18.9, 47.5, i, {
-        color,
-        label: "Madagascar",
-        species: "Baobab and Traveler's Palm",
-        note: "Unique flora; blooms influence lemur feeding and pollination."
-      }, 15, 5);
-    });
-
-    ["#ff1493", "#ff1493", "#ff8c00", "#b22222", "#b22222", "#778899", "#87ceeb", "#ffb6c1", "#ffff00",
-      "#e3e54eff", "#cb84c9ff", "#b52212ff"
-    ].forEach((color, i) => {
-      addBloom(-40.9, 174.9, i, {
-        color,
-        label: "New Zealand Bloom",
-        species: "Kōwhai and Pohutukawa",
-        note: "Seasonal shifts vital for native birds like tui and bellbirds."
-      }, 15, 5);
-    });
-
-    ["#ebe41fff", "#efa3eeff", "#e28ee8ff", "#ef6caeff", "#ea9cd4ff", "#da48c2ff", "#ffffff", "#ff4500",
-      "#ea8ecbff", "#edaa92ff", "#eea58bff", "#e69a87ff"
-    ].forEach((color, i) => {
-      addBloom(-17.7, 178.1, i, {
-        color,
-        label: "Fiji",
-        species: "Hibiscus and Breadfruit",
-        note: "Blooms tied to rainfall cycles; important for pollinators and agriculture."
-      }, 15, 5);
-    });
 
     const GlobeObj = Globe()
       .globeImageUrl('//unpkg.com/three-globe/example/img/earth-blue-marble.jpg')
-      .pointAltitude(d => 0.02 + 0.02 * Math.sin(Date.now() * 0.005 + d.lat))
-      .pointRadius(0.4)
+      .pointsData([])
+      .pointAltitude(0)
+      .pointLabel(d => d.label)
       .pointColor(d => d.color)
-      .pointLabel(d => `
-        <b>${d.label}</b><br>
-        <i>${d.species}</i><br>
-        ${d.note}
-      `);
+      .pointRadius(0.18)
+      .ringsData([])
+      .ringMaxRadius(d => d.maxR)
+      .ringPropagationSpeed(d => d.speed)
+      .ringRepeatPeriod(d => d.period)
+      .ringColor(d => t => `rgba(${d.colorRGB[0]},${d.colorRGB[1]},${d.colorRGB[2]},${1 - t})`);
 
-    const globeElement = document.getElementById('globeViz');
-    GlobeObj(globeElement);
+    GlobeObj(document.getElementById('globeViz'));
+
     GlobeObj.controls().autoRotate = true;
-    GlobeObj.controls().autoRotateSpeed = 0.2;
+    GlobeObj.controls().autoRotateSpeed = 0.3;
 
-    const slider = document.getElementById("monthSlider");
-    const label = document.getElementById("monthLabel");
+    function updateGlobeViz(monthIndex) {
+      document.getElementById('monthLabel').textContent = monthNames[monthIndex];
 
-    function updateGlobe(monthIndex) {
-      label.textContent = monthNames[monthIndex];
-      const filtered = bloomData.filter(d => d.month === monthIndex);
-      GlobeObj.pointsData(filtered);
+      const rings = [];
+      const points = [];
+
+      for (const country of Object.keys(globeLocations)) {
+        // Use the main country name for color lookup (Japan, Alaska, etc.)
+        const colorHex = bloomColors[country] ? bloomColors[country][monthIndex] : "#ffffff";
+        const colorRGB = hexToRgb(colorHex);
+
+        for (const loc of globeLocations[country]) {
+          points.push({
+            lat: loc.lat,
+            lng: loc.lng,
+            label: `${country} — ${loc.label}`,
+            color: colorHex
+          });
+
+          for (let i = 0; i < numRipples; i++) {
+            rings.push({
+              lat: loc.lat,
+              lng: loc.lng,
+              maxR: 3.5,
+              speed: 2,
+              period: basePeriod / (i + 1),
+              colorRGB: colorRGB
+            });
+          }
+        }
+      }
+
+      GlobeObj.pointsData(points);
+      GlobeObj.ringsData(rings);
     }
 
-    updateGlobe(0);
-
-    slider.addEventListener("input", e => {
-      updateGlobe(parseInt(e.target.value));
-    });
-
-    (function animate() {
-      GlobeObj.pointAltitude(d => 0.02 + 0.02 * Math.sin(Date.now() * 0.005 + d.lat));
-      requestAnimationFrame(animate);
-    })();
-
+    // --- Globe Animation/Controls (Adapted to use new updateGlobeViz) ---
+    const slider = document.getElementById("monthSlider");
+    const playBtn = document.getElementById("playBtn");
     let isPlaying = false;
     let playInterval;
-    const playBtn = document.getElementById("playBtn");
 
     playBtn.addEventListener("click", () => {
       if (!isPlaying) {
@@ -308,7 +326,7 @@
         playInterval = setInterval(() => {
           let nextMonth = (parseInt(slider.value) + 1) % 12;
           slider.value = nextMonth;
-          updateGlobe(nextMonth);
+          updateGlobeViz(nextMonth);
         }, 1000);
       } else {
         isPlaying = false;
@@ -317,28 +335,25 @@
       }
     });
 
-    // --- Charts and Data Analysis ---
+    slider.addEventListener("input", e => {
+      updateGlobeViz(parseInt(e.target.value));
+    });
+
+    // small pulse for points (from the new globe code)
+    (function pulsePoints() {
+      const t = Date.now() * 0.002;
+      GlobeObj.pointRadius(0.15 + Math.abs(Math.sin(t)) * 0.06);
+      requestAnimationFrame(pulsePoints);
+    })();
+
+
+    // --- Charts and Data Analysis (ORIGINAL LOGIC) ---
     const locations = {
-      "Japan": {
-        "lat": 36.2048,
-        "lon": 138.2529
-      },
-      "Alaska": {
-        "lat": 64.2008,
-        "lon": -149.4937
-      },
-      "Madagascar": {
-        "lat": -18.7669,
-        "lon": 46.8691
-      },
-      "New Zealand": {
-        "lat": -40.9006,
-        "lon": 174.8860
-      },
-      "Fiji": {
-        "lat": -17.7134,
-        "lon": 178.0650
-      }
+      "Japan": { "lat": 36.2048, "lon": 138.2529 },
+      "Alaska": { "lat": 64.2008, "lon": -149.4937 },
+      "Madagascar": { "lat": -18.7669, "lon": 46.8691 },
+      "New Zealand": { "lat": -40.9006, "lon": 174.8860 },
+      "Fiji": { "lat": -17.7134, "lon": 178.0650 }
     };
 
     let currentLocation = 'Japan';
@@ -387,10 +402,7 @@
         const value = baseValue + seasonalFactor * Math.sin(month * (Math.PI / 6)) + 0.03 * (Math.random() - 0.5);
         ndvi.push(Math.max(0, Math.min(1, value)));
       }
-      return {
-        dates,
-        ndvi
-      };
+      return { dates, ndvi };
     }
 
     let fetchedNDVIData = {};
@@ -554,9 +566,9 @@
 
       const infoPanel = document.getElementById('data-visualization-info');
       infoPanel.innerHTML = `
-                <h3 class="text-xl font-bold text-white/90 mb-2">${locationName}</h3>
-                <p class="text-gray-400">Click on a data point to get an AI prediction for that month.</p>
-            `;
+                <h3 class="text-xl font-bold text-white/90 mb-2">${locationName}</h3>
+                <p class="text-gray-400">Click on a data point to get an AI prediction for that month.</p>
+            `;
       const selectedMonthInfo = document.getElementById('selected-month-info');
       selectedMonthInfo.classList.add('hidden');
     }
@@ -595,10 +607,12 @@
         const location = currentLocation;
         let response = "";
 
-        if (myChart.data.datasets[1].data[selectedDataPointIndex] !== undefined) {
+        if (myChart.data.datasets[1].data[selectedDataPointIndex] !== undefined && selectedDataPointIndex >= myChart.data.datasets[0].data.length) {
+          // This is a future point (part of predicted NDVI)
           const predictedValue = myChart.data.datasets[1].data[selectedDataPointIndex];
           response = `For ${location}, the AI predicts a Normalized Difference Vegetation Index (NDVI) of approximately ${predictedValue.toFixed(2)} in ${selectedMonth}. This is a predicted value based on an analysis of past trends and seasonal cycles.`;
         } else {
+          // This is a historical point
           response = `For ${selectedMonth} in ${location}, the historical NDVI value was approximately ${selectedValue.toFixed(2)}. This value is a historical measurement from our satellite data.`;
         }
 
@@ -644,6 +658,7 @@
       });
     }
 
+    // Function to fly to location on the Globe (Uses coordinates from the chart locations for consistency)
     function flyToLocation(locationName) {
       const location = locations[locationName];
       if (location) {
@@ -657,7 +672,6 @@
 
     window.onload = async () => {
       const chartStatus = document.getElementById('chart-status');
-      const ndviChart = document.getElementById('ndviChart');
       const hdfFileInput = document.getElementById('hdf-file-input');
       const uploadStatusMessage = document.getElementById('upload-status-message');
       const getPredictionButton = document.getElementById('get-prediction-button');
@@ -679,6 +693,9 @@
       initMap();
       createCountryButtons();
       updateChart('Japan');
+
+      // --- Initializing Globe: Uses the new logic ---
+      updateGlobeViz(0);
       flyToLocation('Japan');
 
       if (getPredictionButton) {
@@ -696,47 +713,6 @@
               'File uploaded successfully. Simulating data visualization. Please select a location to see the updated chart.';
             updateChart(currentLocation);
           }, 2000);
-        }
-      });
-
-      // --- Globe Initialization ---
-      const slider = document.getElementById("monthSlider");
-      const label = document.getElementById("monthLabel");
-
-      const updateGlobeViz = (monthIndex) => {
-        label.textContent = monthNames[monthIndex];
-        const filtered = bloomData.filter(d => d.month === monthIndex);
-        GlobeObj.pointsData(filtered);
-      };
-
-      updateGlobeViz(0);
-
-      slider.addEventListener("input", e => {
-        updateGlobeViz(parseInt(e.target.value));
-      });
-
-      (function animateGlobe() {
-        GlobeObj.pointAltitude(d => 0.02 + 0.02 * Math.sin(Date.now() * 0.005 + d.lat));
-        requestAnimationFrame(animateGlobe);
-      })();
-
-      let isPlaying = false;
-      let playInterval;
-      const playBtn = document.getElementById("playBtn");
-
-      playBtn.addEventListener("click", () => {
-        if (!isPlaying) {
-          isPlaying = true;
-          playBtn.textContent = "⏸ Pause";
-          playInterval = setInterval(() => {
-            let nextMonth = (parseInt(slider.value) + 1) % 12;
-            slider.value = nextMonth;
-            updateGlobeViz(nextMonth);
-          }, 1000);
-        } else {
-          isPlaying = false;
-          playBtn.textContent = "▶ Play";
-          clearInterval(playInterval);
         }
       });
     };
